@@ -27,12 +27,7 @@ jobs:
       - name: Build
         uses: actions/setup-node@v3
       - run : npm run build-storybook
-  deploy:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.15.2]
-    steps:
+      # deploy
       - name: Deploy
         uses: easingthemes/ssh-deploy@v2.0.7
         env:
@@ -42,6 +37,7 @@ jobs:
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.TARGET }}
+
 
 
     
