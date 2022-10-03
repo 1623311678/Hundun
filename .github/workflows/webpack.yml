@@ -14,4 +14,6 @@ jobs:
 
     - name: Build
       run: |
+        pwd
+        ls -al
         node -v
