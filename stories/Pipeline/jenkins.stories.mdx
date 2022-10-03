@@ -1,0 +1,35 @@
+import { Meta } from '@storybook/addon-docs';
+
+
+<Meta title="Hundun/流水线/jenkins" />
+
+# jekins pipeline
+
+## 1 安装jenkins
+
+[ubuntu18.04安装jenkins](https://cloud.tencent.com/developer/article/1666282)
+
+修改默认8080端口：
+
+```shell
+sudo vim /etc/default/jenkins
+
+#修改如下内容
+HTTP_PORT=8085
+```
+
+常见命令：
+
+|  命令   | 描述  |
+|  ----  | ----  |
+| systemctl start jenkins  | 启动 |
+| systemctl stop jenkins  | 停止 |
+| ssystemctl reload jenkins  | 重新加载，修改配置后使用此命令生效 |
+| systemctl restart jenkins  | 重启 |
+| systemctl status jenkins | 查看当前状态 |
+| systemctl enable jenkins | 设置开机启动 |
+| systemctl disable jenkins | 取消开机启动 |
+
+
+
+

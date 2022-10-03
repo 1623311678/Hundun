@@ -1,0 +1,162 @@
+import { Meta } from '@storybook/addon-docs';
+
+
+<Meta title="Hundun/部署/nginx" />
+
+# Nginx 服务部署web前端
+
+## 1 nginx 安装
+
+[windows](https://cloud.tencent.com/developer/article/1333800) 、[centos](https://www.jianshu.com/p/056fc71e67c8) 、
+[ubuntu](https://blog.csdn.net/qq_23832313/article/details/83578836)
+
+
+## 2 前端静态资源上传
+
+nginx文件安装完成之后的文件位置：
+
+/usr/sbin/nginx：主程序
+
+/etc/nginx：存放配置文件
+
+/usr/share/nginx：存放静态文件
+
+/var/log/nginx：存放日志
+
+#### 因此需要把前端静态资源存储在/usr/share/nginx 目录
+
+## 3 nginx.config
+
+#### 复制下面的配置，将原有 /etc/nginx/nginx.conf 覆盖掉
+
+该配置监听端口80（8080），静态资源存放在/usr/share/nginx/dist下，并且对静态资源开启了强缓存
+
+```shell
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+include /etc/nginx/modules-enabled/*.conf;
+
+events {
+	worker_connections 768;
+	# multi_accept on;
+}
+
+http {
+
+	##
+	# Basic Settings
+	##
+
+	sendfile on;
+	tcp_nopush on;
+	types_hash_max_size 2048;
+	# server_tokens off;
+
+	# server_names_hash_bucket_size 64;
+	# server_name_in_redirect off;
+
+	include /etc/nginx/mime.types;
+	default_type application/octet-stream;
+
+	##
+	# SSL Settings
+	##
+
+	ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; # Dropping SSLv3, ref: POODLE
+	ssl_prefer_server_ciphers on;
+
+	##
+	# Logging Settings
+	##
+
+	access_log /var/log/nginx/access.log;
+	error_log /var/log/nginx/error.log;
+
+	##
+	# Gzip Settings
+	##
+
+	gzip on;
+
+	gzip_vary on;
+	gzip_proxied any;
+	gzip_comp_level 6;
+	gzip_buffers 16 8k;
+	gzip_http_version 1.1;
+	gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+
+	##
+	# Virtual Host Configs
+	##
+
+	#include /etc/nginx/conf.d/*.conf;
+	#include /etc/nginx/sites-enabled/*;
+	#include /etc/nginx/hosts/server0.host;
+	server {
+	listen 80;
+        root /usr/share/nginx/dist;
+        index index.html index.htm;
+        location / {
+                try_files $uri $uri/ /index.html;
+        }
+        location ^~ /assets/ {
+                gzip_static on;
+                expires max;
+                add_header Cache-Control public;
+        }
+        error_page 500 502 503 504 /500.html;
+        client_max_body_size 20M;
+        keepalive_timeout 10;
+	 location ~* .(html)$ {
+   	 access_log off;
+    	 add_header  Cache-Control  max-age=no-cache;
+  }
+
+  	location ~* .(css|js|png|jpg|jpeg|gif|gz|svg|mp4|ogg|ogv|webm|htc|xml|woff)$ {
+    	# 同上，通配所有以.css/.js/...结尾的请求
+    	access_log off;
+    	add_header    Cache-Control  max-age=360000;
+  }
+  # 当页面调动 /api/* 接口时，自动将请求转到 3030端口
+    location /api {
+        proxy_http_version 1.1;
+        proxy_pass http://127.0.0.1:3030;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_redirect default;
+    }
+     # 当页面调动 /musicApi 接口时，自动将请求转到 http://123.56.221.77 端口，这是远程的IP地址
+    location /musicApi {
+        proxy_http_version 1.1;
+        proxy_pass http://123.56.221.77;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_redirect default;
+    }
+}
+}
+
+#mail {
+#	# See sample authentication script at:
+#	# http://wiki.nginx.org/ImapAuthenticateWithApachePhpScript
+#
+#	# auth_http localhost/auth.php;
+#	# pop3_capabilities "TOP" "USER";
+#	# imap_capabilities "IMAP4rev1" "UIDPLUS";
+#
+#	server {
+#		listen     localhost:110;
+#		protocol   pop3;
+#		proxy      on;
+#	}
+#
+#	server {
+#		listen     localhost:143;
+#		protocol   imap;
+#		proxy      on;
+#	}
+#}
+
+```
+
