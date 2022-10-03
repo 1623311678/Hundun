@@ -14,5 +14,4 @@ jobs:
 
     - name: Build
       run: |
-        cd ..
         npm i
