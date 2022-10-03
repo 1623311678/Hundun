@@ -21,6 +21,7 @@ jobs:
           cache: 'npm'
       - run : npm config set registry http://registry.npm.taobao.org/
       - run : npm install
+      
     steps:
       - name: Build
       - run : npm run build-storybook
