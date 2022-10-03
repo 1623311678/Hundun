@@ -17,6 +17,9 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
     - name: Install
+      with:
+        node-version: 14.15.2
+        cache: 'npm'
       run: |
         npm config set registry http://registry.npm.taobao.org/
         npm install
