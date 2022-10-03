@@ -15,6 +15,4 @@ jobs:
     - name: Build
       run: |
         cd ..
-        pwd
-        ls -al
-        node -v
+        npm i
