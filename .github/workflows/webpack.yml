@@ -16,8 +16,10 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v2
-    - name: Build
+    - name: Install
       run: |
         npm config set registry http://registry.npm.taobao.org/
         npm install
+    - name: Build
+      run: |
         npm run build-storybook

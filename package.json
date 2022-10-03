@@ -20,7 +20,6 @@
     "lodash": "^4.17.20",
     "lodash-es": "^4.17.14",
     "moment-timezone": "^0.5.32",
-    "node-sass": "^5.0.0",
     "path-to-regexp": "^6.2.0",
     "qs": "^6.9.0",
     "react": "^16.12.0",
