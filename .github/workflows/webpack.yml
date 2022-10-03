@@ -15,5 +15,6 @@ jobs:
       uses: actions/checkout@v2
     - name: Build
       run: |
-        yarn install
-        yarn run build-storybook
+        npm config set registry http://registry.npm.taobao.org/
+        npm install
+        npm run build-storybook
