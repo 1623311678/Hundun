@@ -15,3 +15,4 @@ jobs:
     - name: Build
       run: |
         yarn install
+        yarn run build-storybook
