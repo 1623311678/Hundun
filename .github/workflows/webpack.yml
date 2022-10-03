@@ -22,6 +22,7 @@ jobs:
       - run : npm config set registry http://registry.npm.taobao.org/
       - run : npm install
       - name: Build
+        uses: actions/setup-node@v3
       - run : npm run build-storybook
 
     
