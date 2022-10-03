@@ -14,6 +14,7 @@ jobs:
 
     - name: Build
       run: |
+        cd /home/runner/work/Hundun/Hundun
         pwd
         ls -al
         node -v
