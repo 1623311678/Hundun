@@ -12,17 +12,17 @@ jobs:
     strategy:
       matrix:
         node-version: [14.15.2]
-    
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v2
-    - name: Install
-      with:
-        node-version: 14.15.2
-        cache: 'npm'
-      run: |
-        npm config set registry http://registry.npm.taobao.org/
-        npm install
-    - name: Build
-      run: |
-        npm run build-storybook
+      - uses: actions/checkout@v3
+      - name: Install
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+          cache: 'npm'
+      - run : npm config set registry http://registry.npm.taobao.org/
+      - run : npm install
+      - name: Build
+      - run:  npm run build-storybook
+
+    
+    
