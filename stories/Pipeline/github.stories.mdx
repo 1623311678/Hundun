@@ -20,9 +20,9 @@ on:
     branches: [ "master" ]
 
 jobs:
-  #init 
-  init:
-     runs-on: ubuntu-latest
+  #build
+  build:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [14.15.2]
@@ -37,26 +37,10 @@ jobs:
           cache: 'npm'
       - run : npm config set registry http://registry.npm.taobao.org/
       - run : npm install
-  #build
-  build:
-    needs: init
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.15.2]
-    steps:
       # build
       - name: Build
         uses: actions/setup-node@v3
       - run : npm run build-storybook
-  #deploy
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [14.15.2]
-    steps:
       # deploy
       - name: Deploy
         uses: easingthemes/ssh-deploy@v2.0.7
@@ -68,10 +52,16 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
           TARGET: ${{ secrets.TARGET }}
 
+
+
+
+    
+    
+
 ```
 ## 2 功能概述
 
-此脚本实现了对于mater的push或者pull request的响应，分为init，build，deploy三部分，最后上传到云服务上。
+此脚本实现了对于mater的push或者pull request的响应，最后上传到云服务上。
 
 具体操作，可以参考（3）中的两篇文章
 ## 3 参考
