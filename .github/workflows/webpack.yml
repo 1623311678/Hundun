@@ -7,7 +7,8 @@ on:
     branches: [ "master" ]
 
 jobs:
-  build:
+  #init 
+  init:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -23,10 +24,26 @@ jobs:
           cache: 'npm'
       - run : npm config set registry http://registry.npm.taobao.org/
       - run : npm install
+  #build
+  build:
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
       # build
       - name: Build
         uses: actions/setup-node@v3
       - run : npm run build-storybook
+  #deploy
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
       # deploy
       - name: Deploy
         uses: easingthemes/ssh-deploy@v2.0.7
