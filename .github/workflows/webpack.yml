@@ -9,7 +9,7 @@ on:
 jobs:
   #init 
   init:
-     runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [14.15.2]
