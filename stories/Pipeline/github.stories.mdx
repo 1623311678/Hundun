@@ -5,4 +5,79 @@ import { Meta } from '@storybook/addon-docs';
 
 # github 部署到云服务
 
+## 1 脚本
+
+项目根目录下新建/.github/workflow/webpack.yml,并写入下列内容
+
+```shell
+
+name: NodeJS with Webpack
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+  #init 
+  init:
+     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
+      # pull code
+      - uses: actions/checkout@v3
+      # install
+      - name: Install
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+          cache: 'npm'
+      - run : npm config set registry http://registry.npm.taobao.org/
+      - run : npm install
+  #build
+  build:
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
+      # build
+      - name: Build
+        uses: actions/setup-node@v3
+      - run : npm run build-storybook
+  #deploy
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
+      # deploy
+      - name: Deploy
+        uses: easingthemes/ssh-deploy@v2.0.7
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
+          ARGS: "-avz --delete"
+          SOURCE: "storybook-static/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.TARGET }}
+
+```
+## 2 功能概述
+
+此脚本实现了对于mater的push或者pull request的响应，分为init，build，deploy三部分，最后上传到云服务上。
+
+具体操作，可以参考（3）中的两篇文章
+## 3 参考
+
+[github action 指南](https://docs.github.com/cn/actions/learn-github-actions)
+
 [github 自动部署到云服务(github action)](https://cloud.tencent.com/developer/article/1720500)
+
+
