@@ -8,8 +8,8 @@
   "author": "junkai wang",
   "homepage": "https://github.com/1623311678/Hundun",
   "dependencies": {
-    "react": "^16.12.0",
-    "react-dom": "^16.9.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   },
   "devDependencies": {
     "@storybook/addon-actions": "^6.5.12",
