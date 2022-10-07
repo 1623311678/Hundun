@@ -8,7 +8,7 @@ import store from "./store"
 import { Provider, useSelector } from "react-redux"
 import Login from "./pages/Login"
 import "./app.less"
-const a = '1'
+
 const App: FC = () => {
   const token = useSelector((state: any) => {
     return state.userInfo.token
