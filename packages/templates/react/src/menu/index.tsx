@@ -1,8 +1,8 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useEffect, useState } from "react"
 
-import { Menu } from "antd";
-import { AppstoreOutlined } from "@ant-design/icons";
-import { useHistory } from "react-router-dom";
+import { Menu } from "antd"
+import { AppstoreOutlined } from "@ant-design/icons"
+import { useHistory } from "react-router-dom"
 
 const items = [
   {
@@ -14,13 +14,13 @@ const items = [
         label: "主页",
         key: "/",
         parentkey: ["menu"],
-        icon: <AppstoreOutlined></AppstoreOutlined>,
+        icon: <AppstoreOutlined></AppstoreOutlined>
       },
       {
         label: "子菜单项1",
         key: "/about",
         parentkey: ["menu"],
-        icon: <AppstoreOutlined></AppstoreOutlined>,
+        icon: <AppstoreOutlined></AppstoreOutlined>
       },
       {
         label: "子菜单项2",
@@ -32,64 +32,63 @@ const items = [
             label: "users1",
             parentkey: ["menu", "/users"],
             key: "/users/app1",
-            icon: <AppstoreOutlined></AppstoreOutlined>,
+            icon: <AppstoreOutlined></AppstoreOutlined>
           },
           {
             label: "users2",
             parentkey: ["menu", "/users"],
             key: "/users/app2",
-            icon: <AppstoreOutlined></AppstoreOutlined>,
-          },
-        ],
-      },
-    ],
-  },
-];
+            icon: <AppstoreOutlined></AppstoreOutlined>
+          }
+        ]
+      }
+    ]
+  }
+]
 
 const LayoutMenu: FC = () => {
-  const history = useHistory();
-  const pathName = history.location.pathname;
-  const [openKeys, setOpenKeys] = useState([]);
+  const history = useHistory()
+  const pathName = history.location.pathname
+  const [openKeys, setOpenKeys] = useState([])
   function handleClick(item) {
-    // debugger
-    history.push(item.key);
-    // console.log('item',item)
+    history.push(item.key)
   }
   useEffect(() => {
     const getOpenKeys = () => {
-      let openkeys = [];
+      let openkeys = []
       const interate = (arr: any[]) => {
         for (let i = 0; i < arr.length; i++) {
-          const current = arr[i];
-          const curKey = current["key"];
+          const current = arr[i]
+          const curKey = current["key"]
           if (pathName === curKey) {
-            openkeys = current["parentkey"];
+            openkeys = current["parentkey"]
           }
-          const children = current["children"];
+          const children = current["children"]
           if (children) {
-            interate(children);
+            interate(children)
           }
         }
-      };
-      interate(items);
-      return openkeys;
-    };
-    const openkeys = getOpenKeys();
-    setOpenKeys([...openkeys]);
-  }, [pathName]);
+      }
+      interate(items)
+      return openkeys
+    }
+    const openkeys = getOpenKeys()
+    setOpenKeys([...openkeys])
+  }, [history])
+
   return (
     <Menu
       onClick={handleClick}
-      style={{ width: 256, height: "100vh" }}
+      style={{ width: 256, height: `calc(100vh - ${80}px)` }}
       defaultSelectedKeys={[pathName]}
       openKeys={openKeys}
       // 注意这个属性 `onOpenChange`
-      onOpenChange={(openKeys) => {
-        setOpenKeys(openKeys);
+      onOpenChange={openKeys => {
+        setOpenKeys([...openKeys])
       }}
       mode="inline"
       items={items}
     />
-  );
-};
-export default LayoutMenu;
+  )
+}
+export default LayoutMenu

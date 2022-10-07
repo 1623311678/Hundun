@@ -1,5 +1,6 @@
-import React from "react";
+import React from "react"
+
 function Home() {
-  return <h2>主页</h2>;
+  return <h2>主页</h2>
 }
-export default Home;
+export default Home
