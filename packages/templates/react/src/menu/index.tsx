@@ -79,7 +79,11 @@ const LayoutMenu: FC = () => {
   return (
     <Menu
       onClick={handleClick}
-      style={{ width: 256, height: `calc(100vh - ${80}px)` }}
+      style={{
+        width: 256,
+        height: `calc(100vh - ${80}px)`,
+        background: "#fefefe"
+      }}
       defaultSelectedKeys={[pathName]}
       openKeys={openKeys}
       // 注意这个属性 `onOpenChange`

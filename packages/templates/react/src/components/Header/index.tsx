@@ -12,10 +12,21 @@ const Header = () => {
     <div
       style={{
         height: 80,
-        background: "#ccc",
+        background: "black",
         display: "flex",
         alignItems: "center"
       }}>
+      <div
+        className="title"
+        style={{
+          color: "white",
+          width: "200px",
+          textAlign: "center",
+          fontWeight: "bold",
+          fontSize: "25px"
+        }}>
+        混沌工程化
+      </div>
       <Dropdown
         overlay={
           <Card title="退出登录">
@@ -35,7 +46,7 @@ const Header = () => {
             minWidth: "50px",
             minHeight: "50px",
             background: "green",
-            marginLeft: "95%",
+            marginLeft: "80%",
             borderRadius: "25px",
             cursor: "pointer",
             display: "flex",
