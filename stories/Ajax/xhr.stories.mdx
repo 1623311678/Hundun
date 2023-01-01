@@ -1,0 +1,216 @@
+import { Meta } from '@storybook/addon-docs';
+
+
+<Meta title="Hundun/前后端通信/Ajax/xhr" />
+
+# xhr介绍
+
+XMLHttpRequest (XHR) 是一种创建 AJAX 请求的 JavaScript API 。它的方法提供了在浏览器和服务器之间发送请求的能力。
+
+XMLHttpRequest（XHR）对象用于与服务器交互。通过 XMLHttpRequest 可以在不刷新页面的情况下请求特定 URL，获取数据。这允许网页在不影响用户操作的情况下，更新页面的局部内容。XMLHttpRequest 在 AJAX 编程中被大量使用。
+
+尽管名称如此，XMLHttpRequest 可以用于获取任何类型的数据，而不仅仅是 XML。它甚至支持 HTTP 以外的协议（包括 file:// 和 FTP），尽管可能受到更多出于安全等原因的限制。
+
+[MDN链接](https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest)
+
+# XMLHttpRequest.readyState
+
+|  值  | 状态  | 描述  |
+| ---- | ---- | ---- |
+|  0   | UNSENT | 代理被创建，但尚未调用 open() 方法。|
+|  1   | OPENED	| open() 方法已经被调用。|
+|  2	| HEADERS_RECEIVED |	send() 方法已经被调用，并且头部和状态已经可获得。|
+|  3	| LOADING |	下载中；responseText 属性已经包含部分数据。|
+|  4	| DONE | 下载操作已完成。|
+
+# XMLHttpRequest.response
+
+XMLHttpRequest 的 response 属性返回响应的正文。返回的类型为 ArrayBuffer、Blob、Document、JavaScript Object 或字符串中的一个。这取决于请求的 responseType 属性。
+
+# XMLHttpRequest.responseText
+
+XMLHttpRequest.responseText 在一个请求被发送后，从服务器端返回文本。
+
+DOMString 是 XMLHttpRequest 返回的纯文本的值。当 DOMString 为 null 时，表示请求失败了。当DOMString 为 "" 时，表示这个请求还没有被 send()。
+
+# XMLHttpRequest.status
+
+只读属性 XMLHttpRequest.status 返回了 XMLHttpRequest 响应中的数字状态码。status 的值是一个无符号短整型。在请求完成前，status 的值为 0。值得注意的是，如果 XMLHttpRequest 出错，浏览器返回的 status 也为 0。status 码是标准的 HTTP status codes。举个例子，status 200 代表一个成功的请求。如果服务器响应中没有明确指定 status 码，XMLHttpRequest.status 将会默认为 200。
+
+# XMLHttpRequest.timeout
+
+XMLHttpRequest.timeout 是一个无符号长整型数，代表着一个请求在被自动终止前所消耗的毫秒数。默认值为 0，意味着没有超时。超时并不应该用在一个 document environment 中的同步 XMLHttpRequests 请求中，否则将会抛出一个 InvalidAccessError 类型的错误。当超时发生， timeout 事件将会被触发。
+
+# XMLHttpRequest.withCredentials
+
+XMLHttpRequest.withCredentials 属性是一个 Boolean 类型，它指示了是否该使用类似 Cookies、Authorization Headers (头部授权) 或者 TLS 客户端证书这一类资格证书来创建一个跨站点访问控制（cross-site Access-Control）请求。在同一个站点下使用 withCredentials 属性是无效的。
+
+此外，这个指示也会被用做响应中 Cookies 被忽视的标示。默认值是 false。
+
+如果在发送来自其他域的 XMLHttpRequest 请求之前，未设置withCredentials 为 true，那么就不能为它自己的域设置 Cookie 值。而通过设置 withCredentials 为 true 获得的第三方 Cookies，将会依旧享受同源策略，因此不能被通过 document.cookie 或者从头部相应请求的脚本等访问。
+
+# demo
+
+```html
+<button id="ajaxButton" type="button">Make a request</button>
+
+<script>
+(function() {
+  var httpRequest;
+  document.getElementById("ajaxButton").addEventListener('click', makeRequest);
+
+  function makeRequest() {
+    httpRequest = new XMLHttpRequest();
+
+    if (!httpRequest) {
+      alert('Giving up :( Cannot create an XMLHTTP instance');
+      return false;
+    }
+    httpRequest.onreadystatechange = alertContents;
+    httpRequest.open('GET', 'test.html');
+    httpRequest.send();
+  }
+
+  function alertContents() {
+    if (httpRequest.readyState === XMLHttpRequest.DONE) {
+      if (httpRequest.status === 200) {
+        alert(httpRequest.responseText);
+      } else {
+        alert('There was a problem with the request.');
+      }
+    }
+  }
+})();
+</script>
+```
+
+# FormData demo
+
+[MDN链接](https://developer.mozilla.org/zh-CN/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest)
+
+```html
+<!doctype html>
+<html>
+<head>
+<meta http-equiv="Content-Type" charset="UTF-8" />
+<title>Sending forms with FormData &ndash; MDN</title>
+<script>
+"use strict";
+
+function ajaxSuccess () {
+  console.log(this.responseText);
+}
+
+function AJAXSubmit (oFormElement) {
+  if (!oFormElement.action) { return; }
+  var oReq = new XMLHttpRequest();
+  oReq.onload = ajaxSuccess();
+  if (oFormElement.method.toLowerCase() === "post") {
+    oReq.open("post", oFormElement.action);
+    oReq.send(new FormData(oFormElement));
+  } else {
+    var oField, sFieldType, nFile, sSearch = "";
+    for (var nItem = 0; nItem < oFormElement.elements.length; nItem++) {
+      oField = oFormElement.elements[nItem];
+      if (!oField.hasAttribute("name")) { continue; }
+      sFieldType = oField.nodeName.toUpperCase() === "INPUT" ?
+          oField.getAttribute("type").toUpperCase() : "TEXT";
+      if (sFieldType === "FILE") {
+        for (nFile = 0; nFile < oField.files.length;
+            sSearch += "&" + escape(oField.name) + "=" + escape(oField.files[nFile++].name));
+      } else if ((sFieldType !== "RADIO" && sFieldType !== "CHECKBOX") || oField.checked) {
+        sSearch += "&" + escape(oField.name) + "=" + escape(oField.value);
+      }
+    }
+    oReq.open("get", oFormElement.action.replace(/(?:\?.*)?$/, sSearch.replace(/^&/, "?")), true);
+    oReq.send(null);
+  }
+}
+</script>
+</head>
+<body>
+
+<h1>Sending forms with FormData</h1>
+
+<h2>Using the GET method</h2>
+
+<form action="register.php" method="get" onsubmit="AJAXSubmit(this); return false;">
+  <fieldset>
+    <legend>Registration example</legend>
+    <p>
+      First name: <input type="text" name="firstname" /><br />
+      Last name: <input type="text" name="lastname" />
+    </p>
+    <p>
+      <input type="submit" value="Submit" />
+    </p>
+  </fieldset>
+</form>
+
+<h2>Using the POST method</h2>
+<h3>Enctype: application/x-www-form-urlencoded (default)</h3>
+
+<form action="register.php" method="post" onsubmit="AJAXSubmit(this); return false;">
+  <fieldset>
+    <legend>Registration example</legend>
+    <p>
+      First name: <input type="text" name="firstname" /><br />
+      Last name: <input type="text" name="lastname" />
+    </p>
+    <p>
+      <input type="submit" value="Submit" />
+    </p>
+  </fieldset>
+</form>
+
+<h3>Enctype: text/plain</h3>
+
+<p>The text/plain encoding is not supported by the FormData API.</p>
+
+<h3>Enctype: multipart/form-data</h3>
+
+<form action="register.php" method="post" enctype="multipart/form-data"
+    onsubmit="AJAXSubmit(this); return false;">
+  <fieldset>
+    <legend>Upload example</legend>
+    <p>
+      First name: <input type="text" name="firstname" /><br />
+      Last name: <input type="text" name="lastname" /><br />
+      Sex:
+      <input id="sex_male" type="radio" name="sex" value="male" />
+      <label for="sex_male">Male</label>
+      <input id="sex_female" type="radio" name="sex" value="female" />
+      <label for="sex_female">Female</label><br />
+      Password: <input type="password" name="secret" /><br />
+      What do you prefer:
+      <select name="image_type">
+        <option>Books</option>
+        <option>Cinema</option>
+        <option>TV</option>
+      </select>
+    </p>
+    <p>
+      Post your photos:
+      <input type="file" multiple name="photos[]">
+    </p>
+    <p>
+      <input id="vehicle_bike" type="checkbox" name="vehicle[]" value="Bike" />
+      <label for="vehicle_bike">I have a bike</label><br />
+      <input id="vehicle_car" type="checkbox" name="vehicle[]" value="Car" />
+      <label for="vehicle_car">I have a car</label>
+    </p>
+    <p>
+      Describe yourself:<br />
+      <textarea name="description" cols="50" rows="8"></textarea>
+    </p>
+    <p>
+      <input type="submit" value="Submit" />
+    </p>
+  </fieldset>
+</form>
+</body>
+</html>
+
+```
+
+

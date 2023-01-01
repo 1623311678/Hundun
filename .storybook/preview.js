@@ -8,7 +8,17 @@ export const parameters = {
   },
   options: {
     storySort: {
-      order: ['Hundun',['前端工程化','脚手架','部署','流水线']],
+      order: [
+        "Hundun",
+        [
+          "前端工程化",
+          "脚手架",
+          "部署",
+          "流水线",
+          "前后端通信",
+          ["Ajax",['介绍','xhr','Axios'], "Fetch", "WebSocket"],
+        ],
+      ],
     },
   },
-}
+};
