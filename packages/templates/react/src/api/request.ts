@@ -4,6 +4,7 @@
  */
 import { message } from "antd"
 import instance from "./interceptor"
+import qs from "qs"
 
 /**
  * 核心函数，可通过它处理一切请求数据，并做横向扩展
@@ -17,34 +18,46 @@ import instance from "./interceptor"
 function request(
   url,
   params,
-  options = { loading: true, mock: false, error: true },
+  options = { loading: true, mock: false, error: true, isUploadFile: false },
   method
 ) {
   let loadingInstance
+  const { isUploadFile } = options
   // 请求前loading
   //  if(options.loading)loadingInstance=Loading.service();
   return new Promise((resolve, reject) => {
     let data = {}
+    let headers = {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+    }
     // get请求使用params字段
     if (method == "get") {
       data = { params }
     }
     // post请求使用data字段
     if (method == "post") {
-      data = { data: params }
+      data = { data: qs.stringify(params) }
+    }
+    if (isUploadFile) {
+      //上传使用formData
+      headers["Content-Type"] = "multipart/form-data"
+      const formData = new FormData()
+      //服务端也是file
+      formData.append("file", params)
+      data = { data: formData }
     }
     // 通过mock平台可对局部接口进行mock设置
-    //  if(options.mock)url='http://www.mock.com/mock/xxxx/api';
     instance({
       url,
       method,
-      ...data
+      ...data,
+      headers
     })
       .then((res: any) => {
         // 此处作用很大，可以扩展很多功能。
         // 比如对接多个后台，数据结构不一致，可做接口适配器
         // 也可对返回日期/金额/数字等统一做集中处理
-        if (res && res.code === 0) {
+        if (res && res.code === 200) {
           resolve(res.data)
         } else {
           // 通过配置可关闭错误提示
@@ -70,4 +83,8 @@ function get(url: string, params?: any, options?: any) {
 function post(url: string, params?: any, options?: any) {
   return request(url, params, options, "post")
 }
-export { get, post }
+function uploadFile(url: string, params?: any, options?: any) {
+  const newOpt = { ...options, isUploadFile: true }
+  return request(url, params, newOpt, "post")
+}
+export { get, post, uploadFile }

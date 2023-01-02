@@ -4,7 +4,7 @@ import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@src/store/userInfoSlice"
 import apiMap from "@src/api/apiMap"
-import { post } from "@src/api/request"
+import { post, get, uploadFile } from "@src/api/request"
 const FormItem = Form.Item
 const InputStyle = { width: "240px" }
 const Login = () => {

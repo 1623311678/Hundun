@@ -1,6 +1,281 @@
-import { Meta } from '@storybook/addon-docs';
-
+import { Meta } from "@storybook/addon-docs";
 
 <Meta title="Hundun/前后端通信/Ajax/Axios" />
 
-# Axios介绍
+# Axios 介绍
+
+Axios 是一个基于 promise 网络请求库，作用于 node.js 和浏览器中。 它是 isomorphic 的(即同一套代码可以运行在浏览器和 node.js 中)。在服务端它使用原生 node.js http 模块, 而在客户端 (浏览端) 则使用 XMLHttpRequests。
+
+
+浏览器端Axios对xhr进行了一次封装，使用更加方便，摆脱了xhr底层的繁琐；Node端，Axios对nodejs-http模块进行了二次封装[Axios 官网](https://www.axios-http.cn/docs/intro)
+
+# 二次封装（浏览器）
+
+## 1、依赖
+
+| axios  | qs      |
+| ------ | ------- |
+| ^1.0.0 | ^6.11.0 |
+
+## 2、目录
+
+```text
+|-src
+    ｜-api
+        ｜-interceptpr.ts
+        ｜-request.ts
+
+```
+
+## 3、实现
+
+```javascript
+/**
+ * interceptor.ts
+ * 生成基础axios对象，并对请求和响应做处理
+ * 前后端约定接口返回解构规范
+ * {
+ *    code:200,
+ *    data:"成功",
+ *    message:""
+ * }
+ */
+import axios from "axios";
+import { message } from "antd";
+
+// 创建一个独立的axios实例
+const service = axios.create({
+  // 设置baseUr地址,如果通过proxy跨域可直接填写base地址
+  baseURL: "/api",
+  // 定义统一的请求头部
+  // 配置请求超时时间60s
+  timeout: 60000,
+  // 跨域携带cookie
+  withCredentials: true,
+});
+// 请求拦截
+
+service.interceptors.request.use((config) => {
+  // 自定义header，可添加项目token
+  console.log("config", config);
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = token;
+  }
+  return config;
+});
+// 返回拦截
+service.interceptors.response.use(
+  (response) => {
+    // 获取接口返回结果
+    const res = response.data;
+    // code为0，直接把结果返回回去，这样前端代码就不用在获取一次data.
+    if (res.code === 0) {
+      return res;
+    } else if (res.code === 401) {
+      // 401假设是未登录状态码
+      message.warning(res.message);
+      // 也可使用router进行跳转
+      window.location.href = "/login"; //登录页面代码
+      return res;
+    } else {
+      // 错误显示可在service中控制，因为某些场景我们不想要展示错误
+      // Message.error(res.message);
+      return res;
+    }
+  },
+  () => {
+    message.error("网络请求异常，请稍后重试!");
+  }
+);
+export default service;
+```
+
+```javascript
+/**
+ * request.ts
+ * 通过promise对axios做二次封装，针对用户端参数，做灵活配置
+ */
+import { message } from "antd";
+import instance from "./interceptor";
+import qs from "qs";
+
+/**
+ * 核心函数，可通过它处理一切请求数据，并做横向扩展
+ * @param {url} 请求地址
+ * @param {params} 请求参数
+ * @param {options} 请求配置，针对当前本次请求；
+ * @param loading 是否显示loading
+ * @param mock 本次是否请求mock而非线上
+ * @param error 本次是否显示错误
+ */
+function request(
+  url,
+  params,
+  options = { loading: true, mock: false, error: true, isUploadFile: false },
+  method
+) {
+  let loadingInstance;
+  const { isUploadFile } = options;
+  // 请求前loading
+  //  if(options.loading)loadingInstance=Loading.service();
+  return new Promise((resolve, reject) => {
+    let data = {};
+    let headers = {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8",
+    };
+    // get请求使用params字段
+    if (method == "get") {
+      data = { params };
+    }
+    // post请求使用data字段
+    if (method == "post") {
+      data = { data: qs.stringify(params) };
+    }
+    if (isUploadFile) {
+      //上传使用formData
+      headers["Content-Type"] = "multipart/form-data";
+      const formData = new FormData();
+      formData.append("fData", params);
+      data = { data: formData };
+    }
+    // 通过mock平台可对局部接口进行mock设置
+    instance({
+      url,
+      method,
+      ...data,
+      headers,
+    })
+      .then((res: any) => {
+        // 此处作用很大，可以扩展很多功能。
+        // 比如对接多个后台，数据结构不一致，可做接口适配器
+        // 也可对返回日期/金额/数字等统一做集中处理
+        if (res && res.code === 200) {
+          resolve(res.data);
+        } else {
+          // 通过配置可关闭错误提示
+          if (res && options.error) {
+            message.error(res.message);
+          }
+          reject(res);
+        }
+      })
+      .catch((error) => {
+        message.error(error.message);
+      })
+      .finally(() => {
+        // loadingInstance.close();
+      });
+  });
+}
+// 封装GET请求
+function get(url: string, params?: any, options?: any) {
+  return request(url, params, options, "get");
+}
+// 封装POST请求
+function post(url: string, params?: any, options?: any) {
+  return request(url, params, options, "post");
+}
+//上传文件
+function uploadFile(url: string, params?: any, options?: any) {
+  const newOpt = { ...options, isUploadFile: true };
+  return request(url, params, newOpt, "post");
+}
+export { get, post, uploadFile };
+```
+
+## 4 使用
+
+```javascript
+import React from "react";
+import { Form, Checkbox, Input, Button, Card } from "antd";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import { useDispatch } from "react-redux";
+import { updateUserInfo } from "@src/store/userInfoSlice";
+import apiMap from "@src/api/apiMap";
+import { post, get, uploadFile } from "@src/api/request";
+const FormItem = Form.Item;
+const InputStyle = { width: "240px" };
+const Login = () => {
+  const dispatch = useDispatch();
+  const onFinish = (values) => {
+    const payload = {
+      token: `${values["username"]}_${values["password"]}`,
+      userName: values["username"],
+    };
+    post(apiMap.login, {
+      userName: values["username"],
+      password: values["password"],
+    });
+    dispatch(updateUserInfo(payload));
+    console.log("Success:", values);
+  };
+
+  const onFinishFailed = (errorInfo) => {
+    console.log("Failed:", errorInfo);
+  };
+  return (
+    <Card title="登录验证" style={{ width: "60%", margin: "20px auto" }}>
+      <input
+        type="file"
+        onChange={(e) => {
+          const form = document.getElementById("file-test");
+          console.log("e", form["files"][0]);
+          uploadFile("/upload-file", form["files"][0]);
+        }}
+        id="file-test"
+      ></input>
+      <Form
+        name="normal_login"
+        className="login-form"
+        initialValues={{
+          remember: true,
+          username: "admin",
+          password: "123456",
+        }}
+        onFinish={onFinish}
+        onFinishFailed={onFinishFailed}
+        style={{ width: 260, margin: "20px auto" }}
+      >
+        <FormItem
+          name="username"
+          style={InputStyle}
+          rules={[{ required: true, message: "用户名必填" }]}
+        >
+          <Input
+            prefix={<UserOutlined className="site-form-item-icon" />}
+            placeholder="请输入用户名"
+          />
+        </FormItem>
+        <FormItem
+          name="password"
+          style={InputStyle}
+          rules={[{ required: true, message: "密码必填" }]}
+        >
+          <Input
+            prefix={<LockOutlined className="site-form-item-icon" />}
+            type="password"
+            placeholder="请输入密码"
+          />
+        </FormItem>
+        <FormItem>
+          <FormItem name="remember" valuePropName="checked" noStyle>
+            <Checkbox>记住密码</Checkbox>
+          </FormItem>
+        </FormItem>
+
+        <FormItem>
+          <Button
+            type="primary"
+            htmlType="submit"
+            className="login-form-button"
+          >
+            登录
+          </Button>
+        </FormItem>
+      </Form>
+    </Card>
+  );
+};
+export default Login;
+```
