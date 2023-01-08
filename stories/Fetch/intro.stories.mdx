@@ -15,79 +15,67 @@ fetch 不会发送跨域 cookie，除非你使用了 credentials 的初始化选
 
 ```javascript
 //fetch/hFetch.js
-/**
- * Hfetch.js
- * 基于原生fetch封装了拦截器功能，暴露出来的Hfetch跟原生fetch用法一致，只是增加了拦截器功能。拦截器用法参考axios的拦截器用法。
- * 拦截器: interceptors
- */
-
-// 定义用来存储拦截请求和拦截响应结果的处理和错误结果处理的函数集合
-let interceptorsReq = []
-let interceptorsReqError = []
-let interceptorsRes = []
-let interceptorsResError = []
-
-// 复制一份原生fetch的方法，后面我们还是得调用原生的fetch，只是我们在fetch之上做一层封装，添加我们想要的功能
-const OriginFetch = window.fetch
-
-function Hfetch(input, init = {}) {
-  // interceptorsReq是拦截请求的拦截处理函数集合
-  interceptorsReq.forEach(item => {
-    init = item(init)
-  })
-
-  // 在原生fetch外面封装一个promise，为了在promise里面可以对fetch请求的结果做拦截处理。
-  // 同时，保证Hfetch函数返回的结果是个promise对象。
-  return new Promise((resolve, reject) => {
-    // 发起fetch请求，fetch请求的形参是接收上层函数的形参
-    OriginFetch(input, init).then(res => {
-      // interceptorsRes是拦截响应结果的拦截处理函数集合
-      interceptorsRes.forEach(item => {
-        // 拦截器对响应结果做处理，把处理后的结果返回给响应结果。
-        res = item(res)
-      })
-      // 将拦截器处理后的响应结果resolve出去
-      resolve(res)
-    })
-      .catch(err => {
-        // interceptorsResError是拦截响应错误结果的拦截处理函数集合
-        interceptorsResError.forEach(item => {
-        // 拦截器对响应错误结果做处理，把处理后的结果返回给响应结果。
-          err = item(err)
-        })
-        reject(err)
-      })
-  })
-}
-
-// interceptors拦截器提供request和response两种拦截器功能。
-// 可以通过request和response的use方法来绑定两种拦截器的处理函数。
-// use方法接收两个参数，参数为一个callback函数，callback函数用来作为拦截器的成功处理函数，errorCallback作为错误处理函数
-// request.use方法会把callback放在interceptorsReq中，等待执行。
-// response.use方法会把callback放在interceptorsRes中，等待执行。
-// 拦截器的处理函数callback接收一个参数。
-// request拦截器的callback接收的是请求发起前的config；
-// response拦截器的callback接收的是网络请求的response结果。
-const interceptors = {
-  request: {
-    use(callback, errorCallback) {
-      interceptorsReq.push(callback)
-      errorCallback && interceptorsReqError.push(errorCallback)
-    }
-  },
-  response: {
-    use(callback, errorCallback) {
-      interceptorsRes.push(callback)
-      errorCallback && interceptorsResError.push(errorCallback)
+/** disable-eslint */
+class HFetch {
+  constructor(originFetch) {
+    // 定义用来存储拦截请求和拦截响应结果的处理和错误结果处理的函数集合
+    this.OriginFetch = originFetch
+    this.interceptorsReq = []
+    this.interceptorsReqError = []
+    this.interceptorsRes = []
+    this.interceptorsResError = []
+    // interceptors拦截器提供request和response两种拦截器功能。
+    // 可以通过request和response的use方法来绑定两种拦截器的处理函数。
+    // use方法接收两个参数，参数为一个callback函数，callback函数用来作为拦截器的成功处理函数，errorCallback作为错误处理函数
+    // request.use方法会把callback放在interceptorsReq中，等待执行。
+    // response.use方法会把callback放在interceptorsRes中，等待执行。
+    // 拦截器的处理函数callback接收一个参数。
+    // request拦截器的callback接收的是请求发起前的config；
+    // response拦截器的callback接收的是网络请求的response结果。
+    this.interceptors = {
+      request: (callback, errorCallback) => {
+        this.interceptorsReq.push(callback)
+        errorCallback && this.interceptorsReqError.push(errorCallback)
+      },
+      response: (callback, errorCallback) => {
+        this.interceptorsRes.push(callback)
+        errorCallback && this.interceptorsResError.push(errorCallback)
+      }
     }
   }
-}
+  fetch(input, init = {}) {
+    // interceptorsReq是拦截请求的拦截处理函数集合
+    this.interceptorsReq.forEach(item => {
+      init = item(init)
+    })
 
-// 暴露导出这个对象
-export  {
-  Hfetch,
-  interceptors
+    // 在原生fetch外面封装一个promise，为了在promise里面可以对fetch请求的结果做拦截处理。
+    // 同时，保证Hfetch函数返回的结果是个promise对象。
+    return new Promise((resolve, reject) => {
+      // 发起fetch请求，fetch请求的形参是接收上层函数的形参
+      const fetch = this.OriginFetch
+      fetch(input, init)
+        .then(res => {
+          // interceptorsRes是拦截响应结果的拦截处理函数集合
+          this.interceptorsRes.forEach(item => {
+            // 拦截器对响应结果做处理，把处理后的结果返回给响应结果。
+            res = item(res)
+          })
+          // 将拦截器处理后的响应结果resolve出去
+          resolve(res)
+        })
+        .catch(err => {
+          // interceptorsResError是拦截响应错误结果的拦截处理函数集合
+          this.interceptorsResError.forEach(item => {
+            // 拦截器对响应错误结果做处理，把处理后的结果返回给响应结果。
+            err = item(err)
+          })
+          reject(err)
+        })
+    })
+  }
 }
+export default HFetch
 
 
 ```
@@ -95,7 +83,9 @@ export  {
 ```javascript
 //fetch/index.js
 
-import {Hfetch, interceptors} from './hFetch'
+//fetch/index.js
+
+import HFetch from "./hFetch"
 
 /**
  * config 自定义配置项
@@ -114,125 +104,104 @@ let configDefault = {
   mock: false,
   timeout: 10000
 }
-
-// 添加请求拦截器
-interceptors.request.use(config => {
-  configDefault = Object.assign({
-    responseType: 'json',
-    headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-      credentials:'include'
-    },
-  }, configDefault, config)
-  console.log('添加请求拦截器 configDefalut ==>', configDefault)
-  return configDefault
-})
+let hFetchInstace
+if (!hFetchInstace) {
+  hFetchInstace = new HFetch(window.fetch)
+}
 
 // 添加响应拦截器
-interceptors.response.use(async response => {
-  console.log('拦截器response ==>', response)
-  console.log('configDefault', configDefault)
-  
+hFetchInstace.interceptors.response(async response => {
   // TODO: 这里是复制一份结果处理，在这里可以做一些操作
-  const res = await resultReduction(response.clone())
 
- // HTTP 状态码 2xx 状态入口，data.code 为 200 表示数据正确，无任何错误
+  // HTTP 状态码 2xx 状态入口，data.code 为 200 表示数据正确，无任何错误
   if (response.status >= 200 && response.status < 300) {
     return response
-  } else { // 非 2xx 状态入口
-    if (configDefault.withoutCheck) { // 不进行状态状态检测
+  } else {
+    // 非 2xx 状态入口
+    if (configDefault.withoutCheck) {
+      // 不进行状态状态检测
       return Promise.reject(response)
     }
     return Promise.reject(response)
   }
 })
-
-// 结果处理，fetch请求响应结果是promise，还得处理
-async function resultReduction(response) {
-  let res = ''
-  switch (configDefault.responseType) {
-    case 'json':
-      res = await response.json()
-      break
-    case 'text':
-      res = await response.text()
-      break
-    case 'blod':
-      res = await response.blod()
-      break
-    default:
-      res = await response.json()
-      break
-  }
-  console.log('结果处理', res)
-  return res
-}
-
+// 添加请求拦截器
+hFetchInstace.interceptors.request(config => {
+  configDefault = Object.assign(
+    {
+      responseType: "json",
+      headers: {
+        "Content-Type": "application/json;charset=utf-8",
+        credentials: "include"
+      }
+    },
+    configDefault,
+    config
+  )
+  console.log("添加请求拦截器 configDefalut ==>", configDefault)
+  return configDefault
+})
 function request(method, path, data, config) {
   let initData = {
     method,
     ...configDefault,
     ...config,
-    body: JSON.stringify(data),
+    body: JSON.stringify(data)
   }
-  if (method === 'GET') {
-    let params = ''
+  if (method === "GET") {
+    let params = ""
     if (data) {
-    // 对象转url参数
-      params = JSON.stringify(data).replace(/:/g, '=')
-        .replace(/"/g, '')
-        .replace(/,/g, '&')
+      // 对象转url参数
+      params = JSON.stringify(data)
+        .replace(/:/g, "=")
+        .replace(/"/g, "")
+        .replace(/,/g, "&")
         .match(/\{([^)]*)\}/)[1]
     }
-    return Hfetch(`${path}?${params}`, {
-        ...configDefault,
-        ...config,
+    return hFetchInstace.fetch(`${path}?${params}`, {
+      ...configDefault,
+      ...config
     })
   }
 
-  return Hfetch(path, initData)
+  return hFetchInstace.fetch(path, initData)
 }
 
 // get请求方法使用封装
 function get(path, data, config) {
-  return request('GET', path, data, config)
+  return request("GET", path, data, config)
 }
 
 // post请求方法使用封装
 function post(path, data, config) {
-  return request('POST', path, data, config)
+  return request("POST", path, data, config)
 }
 
 // put请求方法使用封装
 function put(path, data, config) {
-  return request('PUT', path, data, config)
+  return request("PUT", path, data, config)
 }
 
 // delete请求方法使用封装
 function del(path, data, config) {
-  return request('DELETE', path, data, config)
+  return request("DELETE", path, data, config)
+}
+function newFetch() {
+  return hFetchInstace.fetch
 }
 
-export default {
-  fetch: Hfetch,
-  get,
-  post,
-  put,
-  delete: del
-}
-
-
+export { newFetch, get, post, put, del }
 
 ```
 # 3、使用
+
 ```javascript
-import fetchApi from './fetch'
 
-winodw.fetch = fetchApi.fetch
-
-fetchApi.get('http://www.xxx', {id: '1'})
-
-fetchApi.post('http://www.xxx', {id: '1'})
+import {newFetch,get} from "@src/fetch"
+window.fetch = newFetch
+get("/api/getList1", { id: "1" })
+get("/api/getList2", { id: "2" })
+get("/api/getList3", { id: "3" })
 
 ```
 
