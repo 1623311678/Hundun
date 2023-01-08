@@ -31,7 +31,7 @@ Axios 是一个基于 promise 网络请求库，作用于 node.js 和浏览器�
 
 ```javascript
 /**
- * interceptor.ts
+ * interceptor.js
  * 生成基础axios对象，并对请求和响应做处理
  * 前后端约定接口返回解构规范
  * {
@@ -93,7 +93,7 @@ export default service;
 
 ```javascript
 /**
- * request.ts
+ * request.js
  * 通过promise对axios做二次封装，针对用户端参数，做灵活配置
  */
 import { message } from "antd";
@@ -146,7 +146,7 @@ function request(
       ...data,
       headers,
     })
-      .then((res: any) => {
+      .then((res) => {
         // 此处作用很大，可以扩展很多功能。
         // 比如对接多个后台，数据结构不一致，可做接口适配器
         // 也可对返回日期/金额/数字等统一做集中处理
@@ -169,15 +169,15 @@ function request(
   });
 }
 // 封装GET请求
-function get(url: string, params?: any, options?: any) {
+function get(url, params, options) {
   return request(url, params, options, "get");
 }
 // 封装POST请求
-function post(url: string, params?: any, options?: any) {
+function post(url, params, options) {
   return request(url, params, options, "post");
 }
 //上传文件
-function uploadFile(url: string, params?: any, options?: any) {
+function uploadFile(url, params, options) {
   const newOpt = { ...options, isUploadFile: true };
   return request(url, params, newOpt, "post");
 }
