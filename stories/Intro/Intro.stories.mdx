@@ -57,6 +57,16 @@ import StackAlt from "../assets/stackalt.svg";
       display: flex;
       align-items: flex-start;
     }
+     .link-item1 {
+      display: block;
+      padding: 20px 30px 20px 15px;
+      border: 1px solid #00000010;
+      border-radius: 5px;
+      transition: background 150ms ease-out, border 150ms ease-out, transform 150ms ease-out;
+      color: #333333;
+      display: flex;
+      align-items: flex-start;
+    }
 
     .link-item:hover {
       border-color: #1EA7FD50;
@@ -171,10 +181,36 @@ import StackAlt from "../assets/stackalt.svg";
     </span>
   </div>
 </div>
-<footer style={{width:'100%',position:'fixed',bottom:0,left:0,zIndex:10}}>
-  <div className="link-item">
-    <span>
-     京ICP
-    </span>
+<footer
+  style={{
+    width: "100%",
+    position: "fixed",
+    bottom: 0,
+    left: 0,
+    zIndex: 10,
+    background: "white",
+  }}
+>
+  <div
+    className="link-item1"
+    style={{
+      color: "orange",
+      display: "flex",
+      flexWrap: "wrap",
+      width: "100%",
+    }}
+  >
+    <div >混沌建站 | </div>
+    <div style={{marginLeft:'10px'}}>前端工程化 | </div>
+    <div style={{marginLeft:'10px'}}>
+      <a
+        href="http://beian.miit.gov.cn/"
+        target="_blank"
+        style={{ color: "orange" }}
+      >
+        京ICP备2023000564号
+      </a>
+    </div>
+    
   </div>
 </footer>
