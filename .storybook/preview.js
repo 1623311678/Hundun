@@ -17,6 +17,7 @@ export const parameters = {
           "流水线",
           "前后端通信",
           ["Ajax",['介绍','xhr','Axios'], "Fetch", "WebSocket"],
+          "监控"
         ],
       ],
     },
