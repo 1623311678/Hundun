@@ -1,3 +1,5 @@
+import helloWord from './helloWord'
+import helloWord2 from './helloWord2'
 const createElement = (tagName, innerText, styleCofig = {}) => {
     const label = document.createElement(tagName)
 
@@ -31,4 +33,6 @@ function toHump(name) {
 
 export default {
     createElement,
+    helloWord,
+    helloWord2
 }
