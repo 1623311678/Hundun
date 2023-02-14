@@ -1,64 +1,41 @@
-import { terser } from "rollup-plugin-terser";
-import { nodeResolve } from "@rollup/plugin-node-resolve"; //将外部引入的js打包进来
-import babel from "rollup-plugin-babel";
-import del from "rollup-plugin-delete"; //
-import commonjs from "@rollup/plugin-commonjs"; //将CommonJS模块转换为ES6, 方便rollup直接调用
-import serve from "rollup-plugin-serve";
-import livereload from "rollup-plugin-livereload";
+import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
+import commonjs from '@rollup/plugin-commonjs';
+import { terser } from 'rollup-plugin-terser';
+import del from 'rollup-plugin-delete';
 
-const isProduction = process.env.NODE_ENV === "production";
-console.log(isProduction);
 export default {
-  input: "./src/index.js",
+  input: './src',
   output: [
     {
-      file: "./dist/index.umd.js",
-      format: "umd",
-      name: "index",
+      dir: 'lib',
+      format: 'cjs',
+      entryFileNames: '[name].cjs.js',
+      sourcemap: false, // 是否输出sourcemap
     },
     {
-      file: "./demo/index.umd.js",
-      format: "umd",
-      name: "index",
-    },
-    {
-      file: "./dist/index.amd.js",
-      format: "amd",
-      name: "index",
-    },
-    {
-      dir: "./dist/index.es.js",
-      format: "es",
-      name: "index",
-      exports: "named", // 指定导出模式（自动、默认、命名、无）
+      dir: 'lib',
+      format: 'esm',
+      entryFileNames: '[name].js',
       preserveModules: true, // 保留模块结构
-      preserveModulesRoot: "src", // 将保留的模块放在根级别的此路径下
+      sourcemap: false, // 是否输出sourcemap
+      name: 'index',
+      exports: 'named', // 指定导出模式（自动、默认、命名、无）
+      preserveModulesRoot: 'src', // 将保留的模块放在根级别的此路径下
+    },
+    {
+      dir: 'lib',
+      format: 'umd',
+      entryFileNames: '[name].umd.js',
+      name: 'FE_utils', // umd模块名称，相当于一个命名空间，会自动挂载到window下面
+      sourcemap: false,
+      plugins: [terser()],
     },
   ],
   plugins: [
-    //源代码更改马上清空dist文件夹下面打包过的文件 防止代码冗余
-    del({ targets: ["dist", "test/index.umd.js"] }),
-    nodeResolve(),
-    commonjs({
-      include: "node_modules/**",
-    }),
-    isProduction && terser(),
-    babel({
-      exclude: "node_modules/**",
-    }),
-    // 开启服务
-    !isProduction &&
-      serve({
-        open: false,
-        host: "localhost",
-        port: 9009,
-        historyApiFallback: true,
-        contentBase: "demo",
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-        },
-      }),
-    // 热更新
-    !isProduction && livereload(),
+    del({ targets: ['lib'] }),
+    resolve({ extensions: ['.js', '.ts'] }),
+    commonjs(),
+    typescript({ module: 'ESNext', sourceMap: false }),
   ],
 };
