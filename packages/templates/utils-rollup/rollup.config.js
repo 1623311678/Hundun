@@ -10,13 +10,16 @@ export default {
     {
       dir: 'lib',
       format: 'cjs',
-      entryFileNames: '[name].cjs.js',
+      entryFileNames: '[name].js',
+      preserveModules: true, // 保留模块结构
       sourcemap: false, // 是否输出sourcemap
+      exports: 'named', // 指定导出模式（自动、默认、命名、无）
+      preserveModulesRoot: 'src', // 将保留的模块放在根级别的此路径下
     },
     {
       dir: 'lib',
       format: 'esm',
-      entryFileNames: '[name].js',
+      entryFileNames: '[name].mjs',
       preserveModules: true, // 保留模块结构
       sourcemap: false, // 是否输出sourcemap
       name: 'index',

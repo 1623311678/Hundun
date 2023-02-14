@@ -1,9 +1,9 @@
 {
   "name": "template-utils",
   "version": "0.0.0",
-  "main": "lib/index.cjs.js",
-  "module": "lib/index.m.js",
-  "jsnext:main": "lib/index.esm.js",
+  "main": "lib/index.cjs",
+  "module": "lib/index.mjs",
+  "jsnext:main": "lib/index.mjs",
   "browser": "lib/index.umd.js",
   "types": "lib/index.d.ts",
   "files": [
