@@ -29,4 +29,4 @@ const formatMoney = (s: number, type = 1): string => {
   return newString;
 };
 
-export { formatMoney };
+export default formatMoney;
