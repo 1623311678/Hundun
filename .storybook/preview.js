@@ -18,7 +18,8 @@ export const parameters = {
           "前后端通信",
           ["Ajax",['介绍','xhr','Axios'], "Fetch", "WebSocket"],
           "监控",
-          "八股文"
+          "八股文",
+          "前端适配"
         ],
       ],
     },
