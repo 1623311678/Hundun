@@ -4,9 +4,9 @@ import { join } from 'path';
 // 创建每一项 label 对应的图片名称
 // 其实就是一个Map集合，用 ts 的写法
 const ITEM_ICON_MAP = new Map<string, string>([
-	['pig1', 'pig1.svg'],
-	['pig2', 'pig2.svg'],
-	['pig3', 'pig3.svg'],
+	['dep', 'dep.png'],
+	['dep', 'dep.png'],
+	['dep', 'dep.png'],
 ]);
 
 // 第一步：创建单项的节点(item)的类
@@ -39,7 +39,7 @@ export class TreeItemNode extends TreeItem {
 	// 所以小伙伴们就以下面这种写法编写
 	static getIconUriForLabel(label: string): Uri {
 		return Uri.file(
-			join(__filename, '..', '..', 'src', 'assert', ITEM_ICON_MAP.get(label) + '')
+			join(__filename, '..', '..', 'media', ITEM_ICON_MAP.get('dep') + '')
 		);
 	}
 }
