@@ -6,6 +6,10 @@ export const parameters = {
       date: /Date$/,
     },
   },
+  viewMode: "docs",
+  previewTabs: {
+    canvas: { hidden: true,},
+  },
   options: {
     storySort: {
       order: [
@@ -16,13 +20,12 @@ export const parameters = {
           "部署",
           "流水线",
           "前后端通信",
-          ["Ajax",['介绍','xhr','Axios'], "Fetch", "WebSocket"],
+          ["Ajax", ["介绍", "xhr", "Axios"], "Fetch", "WebSocket"],
           "监控",
           "八股文",
-          "前端适配"
+          "前端适配",
         ],
       ],
     },
   },
 };
-
