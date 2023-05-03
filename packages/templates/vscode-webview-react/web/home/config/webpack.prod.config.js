@@ -7,15 +7,15 @@ const { merge } = require('webpack-merge');
 const Base = require('./webpack.base.config')
 
 const resolve = path.resolve.bind(path, __dirname);
-const dashboardBuildPath = path.resolve(__dirname,'../dist')
+const dashboardBuildPath = path.resolve(__dirname,'../../../dist/home')
 const publicPath = "./";
 const fileLoaderPath = "file-loader?name=[name].[hash].[ext]";
 const prodConfig =  {
   mode: "production",
   devtool: false,
   output:{
-    chunkFilename: `[name].[chunkhash].js`,
-    filename: `[name].[chunkhash].js`,
+    chunkFilename: `[name].js`,
+    filename: `[name].js`,
     path: resolve(dashboardBuildPath),
     publicPath
   },
@@ -65,49 +65,7 @@ const prodConfig =  {
     minimize: true,
     removeAvailableModules: false,
     removeEmptyChunks: false,
-    splitChunks: {
-      minSize: 10000,
-      chunks: "all",
-      cacheGroups: {
-        editorjs: {
-          name: "chunk-editjs",
-          priority: 10,
-          test: /[\/]node_modules[\/]@editorjs[\/]/,
-          enforce: true
-        },
-        material: {
-          name: "chunk-material",
-          priority: 11,
-          test: /[\/]node_modules[\/]@material-ui[\/]/,
-          enforce: true
-        },
-        react: {
-          name: "chunk-react",
-          priority: 82,
-          test: /[\/]node_modules[\/](react|react-dom|react-router|react-router-dom)[\/]/,
-          enforce: true
-        },
-        antd: {
-          name: "chunk-antd",
-          priority: 13,
-          test: /[\/]node_modules[\/](antd|@ant-design|rc-\w+)[\/]/,
-          enforce: true
-        },
-        echarts: {
-          name: "chunk-echarts",
-          priority: 13,
-          test: /[\/]node_modules[\/](echarts)[\/]/,
-          enforce: true
-        },
-        moment: {
-          chunks: "all",
-          name: "moment",
-          test: /(?<!node_modules.*)[\\/]node_modules[\\/](moment|moment-timezone)[\\/]/,
-          priority: 24,
-          enforce: true
-        }
-      }
-    },
+    splitChunks: false,
     minimizer: [
       // webpack:production模式默认有配有js压缩，但是如果这里设置了css压缩，js压缩也要重新设置,因为使用minimizer会自动取消webpack的默认配置
       new CssMinimizerPlugin({
@@ -143,8 +101,8 @@ const prodConfig =  {
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "[name].[contenthash].css",
-      chunkFilename: "[id].[contenthash].css"
+      filename: "[name].css",
+      chunkFilename: "[name].css"
     }),
   ]
 };

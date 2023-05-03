@@ -3,8 +3,8 @@ import { Form, Checkbox, Input, Button, Card } from "antd"
 import { LockOutlined, UserOutlined } from "@ant-design/icons"
 import { useDispatch } from "react-redux"
 import { updateUserInfo } from "@src/store/userInfoSlice"
-import apiMap from "@src/api/apiMap"
-import { post } from "@src/api/request"
+// import apiMap from "@src/api/apiMap"
+// import { post } from "@src/api/request"
 const FormItem = Form.Item
 const InputStyle = { width: "240px" }
 const Login = () => {
@@ -14,10 +14,10 @@ const Login = () => {
       token: `${values["username"]}_${values["password"]}`,
       userName: values["username"]
     }
-    post(apiMap.login, {
-      userName: values["username"],
-      password: values["password"]
-    })
+    // post(apiMap.login, {
+    //   userName: values["username"],
+    //   password: values["password"]
+    // })
     dispatch(updateUserInfo(payload))
     console.log("Success:", values)
   }

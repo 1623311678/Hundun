@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from "react"
 import { createRoot } from "react-dom/client"
 import LayoutRouter from "@src/router"
-import { BrowserRouter } from "react-router-dom"
+import { BrowserRouter,HashRouter } from "react-router-dom"
 import LayoutMenu from "./menu"
 import LayoutHeader from "@src/components/Header"
 import store from "./store"
@@ -14,13 +14,13 @@ const App: FC = () => {
   })
   if (token) {
     return (
-      <BrowserRouter>
+      <HashRouter>
         <LayoutHeader />
         <div style={{ display: "flex" }}>
           <LayoutMenu />
           <LayoutRouter></LayoutRouter>
         </div>
-      </BrowserRouter>
+      </HashRouter>
     )
   }
   return <Login></Login>
