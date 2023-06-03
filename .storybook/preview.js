@@ -15,7 +15,7 @@ export const parameters = {
       order: [
         "Hundun",
         [
-          "前端工程化",
+          "混沌建站-前端工程化",
           "脚手架",
           "部署",
           "流水线",

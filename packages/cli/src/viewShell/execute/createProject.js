@@ -25,6 +25,20 @@ async function executeCreateproject(type, name) {
         3、npm start
         `);
     }
+    break;
+    case "React-Antd-Mobile": {
+      const source = `${basic}/react-mobile`;
+      hCopy(source, `${process.cwd()}/${name}`);
+      // hExec()
+      log.success(`
+        项目创建完成(react-antd-mobile)
+        请按照下列步骤启动项目
+        1、cd ${name}
+        2、npm install
+        3、npm start
+        `);
+    }
+
   }
 }
 module.exports = {

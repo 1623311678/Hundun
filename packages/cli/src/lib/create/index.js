@@ -21,7 +21,7 @@ function create() {
           type: "list",
           name: "type",
           message: "你想使用什么技术栈？",
-          choices: ["Vue", "React"],
+          choices: ["Vue", "React",'React-Antd-Mobile'],
         },
       ]);
       const payload = {

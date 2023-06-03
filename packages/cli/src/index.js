@@ -23,10 +23,8 @@ await tipMsg(['welcome','to','hundun','cli']);
 create()
   program.on('--help',()=>{
     log.success(`混沌工程化`)
-    log.success(`官方网站：${chalk.cyan('http://39.105.46.228/')}`)
+    log.success(`官方网站：${chalk.cyan('http://hundun.site/')}`)
   })
-  // log.success(`混沌工程化`)
-  // log.success(`官方网站：${chalk.cyan('http://39.105.46.228/')}`)
   program.parse(process.argv);
 };
 executeCommand()
