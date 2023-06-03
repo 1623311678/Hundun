@@ -9,7 +9,7 @@ module.exports = (app) => {
   router.get('/home/:id/:name', HomeController.homeParams)
   router.get('/user', HomeController.login)
   router.post('/user/register', HomeController.register)
-
+  router.get('/customer',CustomerController.getAllCustomers)
   router.get('/customer/:id', CustomerController.getCustomerById)
   // http://localhost:3000/customer/name/dahlin
   router.get('/customer/name/:name', CustomerController.getCustomerByName)
