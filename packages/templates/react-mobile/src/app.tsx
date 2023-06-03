@@ -5,6 +5,13 @@ import { BrowserRouter } from "react-router-dom"
 import store from "./store"
 import { Provider, useSelector } from "react-redux"
 import "./app.less"
+import VConsole from "vconsole"
+const vConsole = new VConsole()
+// 接下来即可照常使用 `console` 等方法
+console.log("Hello world")
+// 结束调试后，可移除掉
+vConsole.destroy()
+
 const App: FC = () => {
   // const token = useSelector((state: any) => {
   //   return state.userInfo.token

@@ -9,6 +9,8 @@ const dashboardBuildPath = path.resolve(__dirname,'../dist')
 const fileLoaderPath = "file-loader?name=[name].[ext]";
 const devConfig = {
   devServer: {
+    host: '0.0.0.0',
+    disableHostCheck: true,
     compress: true,
     contentBase: path.join(__dirname, dashboardBuildPath),
     historyApiFallback: true,
