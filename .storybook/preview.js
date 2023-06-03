@@ -8,7 +8,7 @@ export const parameters = {
   },
   viewMode: "docs",
   previewTabs: {
-    canvas: { hidden: true,},
+    canvas: { hidden: true },
   },
   options: {
     storySort: {
@@ -17,6 +17,8 @@ export const parameters = {
         [
           "混沌建站-前端工程化",
           "脚手架",
+          "标准化模版", 
+          ["介绍","移动端",["介绍","react-antd-mobile"],"PC端"],
           "部署",
           "流水线",
           "前后端通信",

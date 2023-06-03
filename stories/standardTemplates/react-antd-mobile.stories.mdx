@@ -1,0 +1,69 @@
+import { Meta } from "@storybook/addon-docs";
+
+<Meta title="Hundun/标准化模版/移动端/react-antd-mobile" />
+
+# react-antd-mobile 标准化模版
+
+react-antd-mobile 标准化模版,整体采用 webpack+react+antd-mobile 组件库的技术方案。
+
+## 快速开始
+
+```shell
+hundun create my-app
+#如果没有安装hundun-cli可以运行sudo npm install hundun-cli -g来安装，之后再执行创建命令即可
+```
+
+<img
+  alt="react-antd-mobile"
+  src="https://github-production-user-asset-6210df.s3.amazonaws.com/41052302/243120394-8ba7c6ff-a559-4495-aff1-d33777b6ddea.png"
+/>
+
+## 目录结构
+
+```javascript
+｜--root//根目录
+    |--src//前端资源目录
+        |--api//接口
+        |--components//组件
+        |--pages//页面
+        |--router//路由
+        |--store//状态管理，redux
+        |--utils//工具包
+        |--app.less
+        |--app.tsx//入口
+        |--theme.less//主题
+    |--config//编译配置
+        |--webpack.base.config.js//基础配置
+        |--webpack.dev.config.js//开发配置
+        |--webpack.prod.config.js//生产环境配置
+    |--public//静态资源，webpack不会打包里边的内容，需要借助插件copy到打包之后的目录。比如dist
+        |--flexible-plus.js//阿里淘宝flexible最新版本
+        |--flexible.js//阿里淘宝flexible老版本
+        |--index.html
+    |--babel.config.js//babel配置
+    |--commitlintrc.js//commitlint
+    |--.eslintrc.js//eslint
+    |--.prettierrc.js//prettier
+    |--tsconfig.json
+    |--package.json
+    |--package-lock.json
+    |--README.md
+```
+
+## 内容
+
+1、引入了 flexible.js+rem 的移动端适配方案
+
+2、引入了 vconsole 来作为移动端线上调试
+
+3、配置了 webpack-dev-server 的 host 为 0.0.0.0,在手机与电脑同一个局域网下，手机可以直接通过 IP 来访问本地页面。
+
+4、引入了 swipper，并简单做 demo
+
+## Demo
+
+<img
+  alt="image"
+  style={{ width: 350, height: 700, objectFit: "contain" }}
+  src="https://github-production-user-asset-6210df.s3.amazonaws.com/41052302/243124339-8ff62f3d-4dbd-4f85-952c-22c0bf37f45c.png"
+/>

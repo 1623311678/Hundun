@@ -1,14 +1,14 @@
 import { Meta } from "@storybook/addon-docs";
 import Plugin from "../assets/plugin.png";
-import template from "../assets/template.png"
-import compile from "../assets/compile.png"
-import devRule from "../assets/devRule.png"
-import view from "../assets/view.png"
-import lowCode from "../assets/lowCode.png"
-import mircroClient from "../assets/mircroClient.png"
-import monitor from "../assets/monitor.png"
-import article from "../assets/article.png"
-import Logo from '../assets/logo.png';
+import template from "../assets/template.png";
+import compile from "../assets/compile.png";
+import devRule from "../assets/devRule.png";
+import view from "../assets/view.png";
+import lowCode from "../assets/lowCode.png";
+import mircroClient from "../assets/mircroClient.png";
+import monitor from "../assets/monitor.png";
+import article from "../assets/article.png";
+import Logo from "../assets/logo.png";
 
 <Meta title="Hundun/混沌建站-前端工程化" />
 
@@ -136,21 +136,24 @@ import Logo from '../assets/logo.png';
 
 # Welcome to Hundun
 
- <img src={Logo} alt="Logo" className="hundun-logo"/>
+{" "}
+<img src={Logo} alt="Logo" className="hundun-logo" />
 
 ### 混沌建站，一站式前端工程化解决方案。
-
-
 
 <div className="subheading">工程化能力</div>
 
 <div className="link-list">
-  <div className="link-item">
-    <img src={template} alt="template" />
-    <span>
-      <strong>标准化模版</strong>
-      Vue,React，SSR，CSR,VScode插件,H5,一码多端 模版
-    </span>
+  <div className="link-item">　
+    <a
+      href={`http://${window.location.host}/?path=/docs/hundun-%E6%A0%87%E5%87%86%E5%8C%96%E6%A8%A1%E7%89%88-%E7%A7%BB%E5%8A%A8%E7%AB%AF-%E4%BB%8B%E7%BB%8D--page`}
+    >
+      <img src={template} alt="template" />
+      <span>
+        <strong>标准化模版</strong>
+        Vue,React，SSR，CSR,VScode插件,H5,一码多端 模版
+      </span>
+    </a>
   </div>
   <div className="link-item">
     <img src={compile} alt="Build" />
