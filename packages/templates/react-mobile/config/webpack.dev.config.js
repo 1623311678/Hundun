@@ -40,12 +40,12 @@ const devConfig = {
           "css-loader",
           "sass-loader"
         ].concat([
-          {
-            loader: "sass-resources-loader",
-            options: {
-              resources:  path.resolve(__dirname,'../src/styles/base.scss')
-            }
-          }
+          // {
+          //   loader: "sass-resources-loader",
+          //   options: {
+          //     resources:  path.resolve(__dirname,'../src/styles/base.scss')
+          //   }
+          // }
         ])
       },
       {

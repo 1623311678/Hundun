@@ -6,19 +6,11 @@ import {
   Redirect
 } from "react-router-dom"
 import Home from "@src/pages/Home"
-import About from "@src/pages/About"
-import Users from "@src/pages/Users"
-import Users1 from "@src/pages/Users1"
-import Users2 from "@src/pages/Users2"
 import NotFound from "@src/pages/404"
 
 const routes = [
   { path: "/", compoment: Home },
-  { path: "/404", compoment: NotFound },
-  { path: "/about", compoment: About },
-  { path: "/users", compoment: Users },
-  { path: "/users/app1", compoment: Users1 },
-  { path: "/users/app2", compoment: Users2 }
+  { path: "/404", compoment: NotFound }
 ]
 function AppRouter() {
   return (
