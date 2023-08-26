@@ -6,7 +6,7 @@ module.exports = {
   home: async(ctx, next) => {
     // console.log(ctx.request.query)
     // console.log(ctx.request.querystring)
-    ctx.response.body = '<h1>HOME page</h1>'
+    ctx.response.body = {name:'xxxx',age:'xxxx'}
   },
   homeParams: async(ctx, next) => {
     console.log(ctx.params)
