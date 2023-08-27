@@ -1,0 +1,88 @@
+import { Meta } from '@storybook/addon-docs';
+
+
+<Meta title="Hundun/expo/介绍"/>
+
+## 1.综述
+
+随着前端技术的发展，跨端成为一种主流的开发方式，主流的跨端方式有flutter,react native,weex，uniapp等，对前端来说，flutter与新学一门语言并无区别，
+
+react native 、weex，uniapp则相对友好很多。本文侧重介绍react native的最简单的上手思路-[expo](https://docs.expo.dev/)
+
+expo 最大的优点是不需要配置开发环境，expo-cli，eas远端构建，缺点也很明显，国内的一些库可能无法通过原生方式应用，比如高德SDK
+
+## 2.创建app
+
+```shell
+
+npx create-expo-app my-app
+```
+## 3.安装依赖
+
+```shell
+# 注意这里不要用taobao镜像，不然有的依赖可能没有
+npm install 
+```
+## 4.下载expo Go 调试App
+
+安卓手机点下列链接下载即可：
+
+https://d1ahtucjixef4r.cloudfront.net/Exponent-2.29.6.apk
+
+iPhone点下列链接下载即可：
+
+https://dpq5q02fu5f55.cloudfront.net/Exponent-2.29.4.tar.gz
+
+注意：
+
+这个版本的expo Go只支持expo-sdk 47，48，49，使用其他sdk 可下载其他版本的expo Go
+
+## 启动项目
+
+```shell
+
+npm start 
+```
+随后用expo Go App扫码即可
+
+## 5.部署发布
+
+### 5.1 注册expo账户
+
+去 https://expo.dev/ 注册 expo账户，为eas发布做准备
+
+### 5.2 安装eas-cli
+
+```shell
+
+sudo npm install -g eas-cli@latest
+```
+
+### 5.3 部署发布
+
+android:
+
+eas build -p android --profile preview
+
+iOS:
+
+eas build -p ios --profile preview
+
+### 6 模版项目
+
+https://github.com/1623311678/expo-app-demo
+
+该项目使用expo-sdk49 配置了android eas-build 以及包括了常用的动态热更新，下载/分享文件，扫二维码，图片上传，保存到相册，录制视频，拍照上传，相机，webview，音视频，webview与H5通信，路由回退问题等
+
+
+
+
+
+
+
+
+
+
+
+
+
