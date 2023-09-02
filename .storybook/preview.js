@@ -20,7 +20,7 @@ export const parameters = {
           "标准化模版", 
           ["介绍","移动端",["介绍","react-antd-mobile"],"PC端"],
           "expo",
-          ["介绍",'webView','相机'],
+          ["介绍",'webView','相机','动态化更新'],
           "部署",
           "流水线",
           "前后端通信",

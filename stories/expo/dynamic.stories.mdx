@@ -1,0 +1,55 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/expo/动态化更新" />
+
+## 综述
+
+对于App˜来说，每次下载更新无疑是一大痛点，为了解决这类问题，于是有了动态化方案，简单说如果不涉及新插件的迭代，那么通过动态打包js，css之后，推到远端，
+
+是完全可以实现不用下载就能更新的。
+
+另一方面，小程序与H5本身就是动态化的，因此这里只讨论APP提供的原生动态化能力。
+
+expo官方提供了expo- update来支撑动态化能力，expo　本身提供了存储动态资源的能力，当然也可以自建服务存储。详见：https://docs.expo.dev/versions/latest/sdk/updates/
+
+## 核心实现
+
+```javascript
+import React from "react";
+import { View,Text,} from "react-native";
+import { Button, Dialog } from "@rneui/themed";
+import * as Updates from "expo-updates";
+export default function CheckAndUpdate() {
+  async function onFetchUpdateAsync() {
+    try {
+      const update = await Updates.checkForUpdateAsync();
+
+      if (update.isAvailable) {
+        await Updates.fetchUpdateAsync();
+        await Updates.reloadAsync();
+        alert('更新成功')
+      }else{
+        alert('已是最新版本')
+      }
+    } catch (error) {
+      // You can also add an alert() to see the error message in case of an error when fetching updates.
+      alert(`Error fetching latest Expo update: ${error}`);
+    }
+  }
+  return (
+    <View style={{ flex: 1, flexDirection: "row", justifyContent: "center" }}>
+      <View style={{ width: 150, marginRight: 5 }}>
+        <Button onPress={onFetchUpdateAsync}>检查更新(?)</Button>
+      </View>
+      {/* <View style={{ width: 150,marginLeft:5 }}>
+        <Button>检查更新2</Button>
+      </View> */}
+    </View>
+  );
+}
+
+```
+## 附录
+
+RN APP更新方案：https://blog.csdn.net/weixin_43972437/article/details/122113169
