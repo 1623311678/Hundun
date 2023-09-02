@@ -1,0 +1,470 @@
+import { Meta } from "@storybook/addon-docs";
+import webViewImg from "../assets/webview-demo.jpeg";
+
+<Meta title="Hundun/expo/webView" />
+
+## 介绍
+
+webView 一直是 H5 集成在 APp 内部最快的方法，就连火爆的各类小程序也离不开 webView 的渲染。下面我们来介绍一下 expo 中 webview 的用法，包括如何与 App 通信，H5 路由与原生 App 路由跳转与返回问题。
+
+官方文档参考 [expo-webview](https://docs.expo.dev/versions/latest/sdk/webview/) [react-native-webview 中文文档](https://reactnative.cn/docs/webview)
+
+## 示例
+
+<img src={webViewImg} alt="webViewImg" style={{ width: 350, height: 700 }} />
+
+## 核心代码讲解
+
+### APP 端
+
+```javascript
+import React from "react";
+import { WebView } from "react-native-webview";
+import { useNavigation } from "expo-router";
+import { BackHandler } from 'react-native';
+export function demo() {
+  //定义webview承接变量，便于APP与H5通过postMessage交互
+  let webViewRef: any = null;
+  //定义发消息的回掉函数，第一个window是web网站的window，响应的时候在web端，第二个是RN里的window,响应的时候已经嵌入app了
+  const injectedJavaScript = `
+  (function() {
+    window.postMessage2 = function(data) {
+      window.ReactNativeWebView.postMessage(data);
+    };
+  })()`;
+  const navigation:any = useNavigation()
+  const [canWebGoBack, setCanWebGoBack] = useState(false);
+  useEffect(() => {
+    const backHandlerListener = BackHandler.addEventListener('hardwareBackPress',
+      () => {
+        // console.log('BACK PRESSED FROM APP');
+        // // doSomethingThatIWant();
+        // // alert('BACK PRESSED FROM APP')
+        // console.log('canWebGoBack',canWebGoBack)
+        if(canWebGoBack&&webViewRef){
+         webViewRef.goBack()
+         //APP发消息给H5
+         webView.postMessage('H5APP内返回上一级成功')
+        }else if(navigation.canGoBack()){
+          // alert('o')
+          try{
+          navigation.goBack()
+          }catch(e){
+            return false
+          }
+        }
+        // webViewRef.goBack()
+        return true; // prevent default behaviour;
+      }
+    );
+
+    return () => {
+      backHandlerListener.remove();
+    };
+  }, [canWebGoBack]);
+  return(
+
+  <WebView
+    ref={(ref: any) => {
+      //   setWebViewRef(ref);
+      webViewRef = ref;
+    }}
+     onNavigationStateChange={(navState:any) => {
+      // webview内是否可以返回，webview内能返回的时候，要调用webview的返回，否则调用原生APP返回
+        if (navState.canGoBack) {
+            //可返回
+          setCanWebGoBack(true)
+        } else {
+            //不可
+          setCanWebGoBack(false)
+        }
+      }}
+    //在网页加载之前注入的一段 JS 代码。将回掉函数注入H5内并挂载在web页面的window下
+    injectedJavaScript={injectedJavaScript}
+    // 响应 window.ReactNativeWebView.postMessage(data);
+    onMessage={(event) => {
+      try {
+        // 传过来的 data 肯定为字符串，可以跟 web 端约定好交互的数据格式
+        // const data = JSON.parse(event.nativeEvent.data);
+        alert(JSON.stringify(event));
+      } catch (error) {
+        alert(error);
+        // handle parse error
+      }
+    }}
+    //设置 true 的时候会使用新的 WKWebView 来代替老的 UIWebView。
+    useWebKit
+    //控制是否启用 JavaScript。仅在安卓下使用，因为 IOS 默认为启用 JavaScript。默认值为true。
+    javaScriptEnabled={true}
+    //允许文件系统
+    allowFileAccess
+    onLoadEnd={() => {
+      if (webViewRef) {
+        // 加载webview成功
+        webViewRef.postMessage(selectedPdf);
+      }
+    }}
+    source={{
+      //加载的资源，不缓存
+      uri: "http://hundun.site/hundun-web-view/previewPDF.html",
+      method: "GET",
+      headers: { "Cache-Control": "no-cache" },
+      // uri:"http://localhost:9002/previewPDF.html"
+    }}
+  />);
+}
+```
+
+### web/H5  端
+
+#### 发送消息给App
+
+```javascript
+<div
+  onClick={() => {
+    const pWin: any = window;
+    if (pWin.postMessage2) {
+     //注入的回掉函数在这里触发
+      pWin.postMessage2("Web-TO-RN");
+    }
+  }}
+>
+  发消息
+</div>
+```
+#### 监听RN-APP消息
+```javascript
+  useEffect(() => {
+    const handleEvent = (event: any) => {
+      const url = event.data
+      setPreviewUrl(event.data)
+      alert(`RN-TO_WEB:${url}`)
+      // alert(`RN-TO-Web:${JSON.stringify(event)}`)
+    }
+    document.addEventListener("message", handleEvent)
+    return () => {
+      document.removeEventListener("message", handleEvent)
+    }
+  }, [])
+```
+
+## web/H5 端代码
+
+```javascript
+import React from "react";
+// import { Icon, Spin, Tooltip,Input } from 'antd';
+import "./PDF.less";
+
+import { Document, Page, pdfjs } from "react-pdf";
+import { SpinLoading, Input } from "antd-mobile";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `http://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+//https://juejin.cn/post/6888964708214013959
+class File extends React.Component<any, any> {
+  constructor(props: any) {
+    super(props);
+    this.state = {
+      pageNumber: 1,
+      pageNumberInput: 1,
+      pageNumberFocus: false,
+      numPages: 1,
+      pageWidth: 600,
+      fullscreen: false,
+    };
+  }
+
+  onDocumentLoadSuccess = ({ numPages }) => {
+    this.setState({ numPages: numPages });
+  };
+
+  lastPage = () => {
+    if (this.state.pageNumber == 1) {
+      return;
+    }
+    const page = this.state.pageNumber - 1;
+    this.setState({ pageNumber: page, pageNumberInput: page });
+  };
+  nextPage = () => {
+    if (this.state.pageNumber == this.state.numPages) {
+      return;
+    }
+    const page = this.state.pageNumber + 1;
+    this.setState({ pageNumber: page, pageNumberInput: page });
+  };
+  onPageNumberFocus = (e) => {
+    this.setState({ pageNumberFocus: true });
+  };
+  onPageNumberBlur = (e) => {
+    this.setState({
+      pageNumberFocus: false,
+      pageNumberInput: this.state.pageNumber,
+    });
+  };
+  onPageNumberChange = (e) => {
+    let value = e.target.value;
+    value = value <= 0 ? 1 : value;
+    value = value >= this.state.numPages ? this.state.numPages : value;
+    this.setState({ pageNumberInput: value });
+  };
+  toPage = (e) => {
+    this.setState({ pageNumber: Number(e.target.value) });
+  };
+
+  pageZoomOut = () => {
+    if (this.state.pageWidth <= 600) {
+      return;
+    }
+    const pageWidth = this.state.pageWidth * 0.8;
+    this.setState({ pageWidth: pageWidth });
+  };
+  pageZoomIn = () => {
+    const pageWidth = this.state.pageWidth * 1.2;
+    this.setState({ pageWidth: pageWidth });
+  };
+
+  pageFullscreen = () => {
+    if (this.state.fullscreen) {
+      this.setState({ fullscreen: false, pageWidth: 600 });
+    } else {
+      this.setState({ fullscreen: true, pageWidth: window.screen.width - 40 });
+    }
+  };
+
+  render() {
+    const {
+      pageNumber,
+      pageNumberFocus,
+      pageNumberInput,
+      numPages,
+      pageWidth,
+      fullscreen,
+    } = this.state;
+    return (
+      <div>
+        <div className={"view"}>
+          <div className={"pageContainer"}>
+            <Document
+              file={
+                this.props.previewurl ||
+                "https://pdf.dfcfw.com/pdf/H3_AP202304201585601855_1.pdf?1681977223000.pdf"
+              }
+              onLoadSuccess={this.onDocumentLoadSuccess}
+              loading={<SpinLoading color="primary" />}
+            >
+              <Page pageNumber={pageNumber} width={pageWidth} />
+            </Document>
+          </div>
+        </div>
+        <div className={"pageTool"}>
+          <div onClick={this.lastPage}>
+            {pageNumber == 1 ? "已是第一页" : "上一页"}
+          </div>
+          <div style={{ color: "white" }}>
+            <span>{pageNumberFocus ? pageNumberInput : pageNumber}</span>
+            <span>{`/${numPages}`}</span>
+          </div>
+          <div onClick={this.nextPage}>
+            {pageNumber == numPages ? "已是最后一页" : "下一页"}
+          </div>
+          <div onClick={this.pageZoomIn}>放大</div>
+          <div onClick={this.pageZoomOut}>缩小</div>
+          <div onClick={this.pageFullscreen}>
+            {fullscreen ? "退出" : "全屏"}
+          </div>
+          <div
+            onClick={() => {
+              const pWin: any = window;
+              if (pWin.postMessage2) {
+                pWin.postMessage2("Web-TO-RN");
+              }
+            }}
+          >
+            发消息
+          </div>
+          <div
+            onClick={() => {
+              window.location.href = "https://www.baidu.com/";
+            }}
+          >
+            　跳转到百度
+          </div>
+        </div>
+      </div>
+    );
+  }
+}
+
+export default (props) => <File {...props} />;
+```
+
+## APP 端代码
+
+```javascript
+import React from "react";
+import { View, Text } from "react-native";
+import { Button, Dialog } from "@rneui/themed";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+import { useState, useEffect } from "react";
+import * as Sharing from "expo-sharing";
+import { WebView } from "react-native-webview";
+import { Link, Tabs, useNavigation } from "expo-router";
+// const htmlStr = require('./downFileDist/index.html')
+// alert(htmlStr)
+export default function DownLoadFile() {
+  const [selectedPdf, setselectedPdf] =
+    useState <
+    any >
+    "https://pdf.dfcfw.com/pdf/H3_AP202304201585601855_1.pdf?1681977223000.pdf";
+  const [downloadProgress, setProgess] = useState(0);
+  const [htmlStr, setHtml] = useState("<div></div>");
+  const [visible, setVisible] = useState(false);
+  //   const [webViewRef, setWebViewRef] = useState<any>(null);
+  let webViewRef: any = null;
+  const injectedJavaScript = `
+  (function() {
+    window.postMessage2 = function(data) {
+      window.ReactNativeWebView.postMessage(data);
+    };
+  })()`;
+  const navigation: any = useNavigation();
+  return (
+    <View
+      style={{
+        marginTop: 20,
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "center",
+      }}
+    >
+      <View style={{ width: 150, marginRight: 5 }}>
+        <Button
+          onPress={async () => {
+            setProgess(0);
+            if (
+              selectedPdf.startsWith("http") ||
+              selectedPdf.startsWith("https")
+            ) {
+              //处理网络图片
+              const callback = (downloadProgress: any) => {
+                const progress =
+                  downloadProgress.totalBytesWritten /
+                  downloadProgress.totalBytesExpectedToWrite;
+                setProgess(progress);
+              };
+
+              const downloadResumable = FileSystem.createDownloadResumable(
+                selectedPdf,
+                FileSystem.documentDirectory + "大模型.pdf",
+                {},
+                callback
+              );
+              try {
+                const photoData: any = await downloadResumable.downloadAsync();
+                const uri = photoData.uri;
+                if (!(await Sharing.isAvailableAsync())) {
+                  alert(`分享无法使用`);
+                  return;
+                }
+                await Sharing.shareAsync(uri);
+              } catch (e) {
+                alert(e);
+              }
+            } else {
+              const asset = await MediaLibrary.createAssetAsync(selectedPdf);
+              alert(JSON.stringify(asset));
+            }
+          }}
+        >
+          {`下载文件(${parseInt(String(downloadProgress * 100))})%`}
+        </Button>
+      </View>
+      <View style={{ width: 150, marginLeft: 5 }}>
+        <Button
+          onPress={() => {
+            setVisible(true);
+          }}
+        >
+          预览文件
+        </Button>
+      </View>
+
+      <Dialog
+        isVisible={visible}
+        overlayStyle={{
+          height: "100%",
+          width: "100%",
+          backgroundColor: "black",
+        }}
+        onBackdropPress={() => {
+          //   reset();
+          setVisible(false);
+        }}
+      >
+        <Dialog.Title title="相机" />
+
+        <View style={{ width: "100%", height: "100%" }}>
+          <WebView
+            ref={(ref: any) => {
+              //   setWebViewRef(ref);
+              webViewRef = ref;
+            }}
+            onNavigationStateChange={(navState: any) => {
+              alert(JSON.stringify(navState));
+              if (navState.canGoBack) {
+                alert("truetrue");
+                navigation.setParams({
+                  headerLeftInfo: {
+                    title: "",
+                    onPress: () => webViewRef.current.goBack(),
+                  },
+                });
+              } else {
+                navigation.setParams({
+                  headerLeftInfo: null,
+                });
+              }
+            }}
+            injectedJavaScript={injectedJavaScript}
+            onMessage={(event) => {
+              try {
+                // 传过来的 data 肯定为字符串，可以跟 web 端约定好交互的数据格式
+                // const data = JSON.parse(event.nativeEvent.data);
+                alert(JSON.stringify(event));
+              } catch (error) {
+                alert(error);
+                // handle parse error
+              }
+            }}
+            useWebKit
+            javaScriptEnabled={true}
+            allowFileAccess
+            onLoadEnd={() => {
+              if (webViewRef) {
+                // alert(JSON.stringify(webViewRef.postMessage))
+                webViewRef.postMessage(selectedPdf);
+              }
+            }}
+            source={{
+              uri: "http://hundun.site/hundun-web-view/previewPDF.html",
+              method: "GET",
+              headers: { "Cache-Control": "no-cache" },
+              // uri:"http://localhost:9002/previewPDF.html"
+            }}
+          />
+        </View>
+        <View style={{ position: "absolute", right: 20, top: 20 }}>
+          <Text
+            style={{ color: "white" }}
+            onPress={() => {
+              setVisible(false);
+            }}
+          >
+            关闭
+          </Text>
+        </View>
+      </Dialog>
+    </View>
+  );
+}
+```

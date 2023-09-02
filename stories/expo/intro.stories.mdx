@@ -74,6 +74,27 @@ https://github.com/1623311678/expo-app-demo
 
 该项目使用expo-sdk49 配置了android eas-build 以及包括了常用的动态热更新，下载/分享文件，扫二维码，图片上传，保存到相册，录制视频，拍照上传，相机，webview，音视频，webview与H5通信，路由回退问题等
 
+## 可能的问题
+
+由于CN，可能存在eas部署无法连接google cloud的问题
+
+```javascript
+Build/Submit details page URL
+No response
+
+Summary
+Failed to upload the project tarball to EAS Build
+
+Compressing project files and uploading to EAS Build. Learn more
+✖ Uploading to EAS Build (127 KB / 6.3 MB)
+Failed to upload the project tarball to EAS Build
+
+Reason: request to https://storage.googleapis.com/turtle-v2-projects/production/7d986165-0e82-4ff4-a727-b8db7f25a3bf/e0b9aa26-fb11-418c-a10a-4c58d4b53d55?X-Goog-Algorithm=GOOG4-RSA-SHA256&X-Goog-Credential=www-production%40exponentjs.iam.gserviceaccount.com%2F20230827%2Fauto%2Fstorage%2Fgoog4_request&X-Goog-Date=20230827T132519Z&X-Goog-Expires=3601&X-Goog-SignedHeaders=host%3Bx-goog-content-length-range&X-Goog-Signature=1ea57402c1b5da14a26c5d73faf8130142e374edb56107881706d34e4845ed6eeb97c4b8dc3e5f9b55566a69082261745880e11f79f752d891c9b9600d750b6cf1b16ac6ece606bf279c99949f8f0a1c84d433250233ab8f67b3c00e7f4b6fd9367dea19c110689d927074367a54a8c0a7028cdf951279289d0200da87d0e3315c2461459780af0d0efe67258ab5494d68ba047bf4c7028ef5680faa9dfc76f1e884ed7e76386b003fb31d4e1c95fcc7dfccd7cbe852c37800aa6ad8033857483ff9e9285526afd7d4352ebde6f9f99197b609b271aa9ea004944516e10437c11db9b7fb0ce3cabb5199a2da08364235b1bec97a82327780b8c0f8087e6421b3 failed, reason: read ECONNRESET
+Error: build command failed.
+```
+
+参考 issue　：https://github.com/expo/eas-cli/issues/2026
+
 
 
 
