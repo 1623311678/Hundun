@@ -1,0 +1,812 @@
+import { Meta } from "@storybook/addon-docs";
+import camera1 from "../assets/camera1.jpeg";
+import camera2 from "../assets/camera2.jpeg";
+import camera3 from "../assets/camera3.jpeg";
+import camera4 from "../assets/camera4.jpeg";
+
+<Meta title="Hundun/expo/相机" />
+
+## 介绍
+
+本文应用 expo-camera 完成从相册选择，拍照上传，扫二维码，录制视频，播放视频，下载图片，下载视频等功能。
+
+expo-camera 官方文档参考https://docs.expo.dev/versions/latest/sdk/camera/
+
+## 示例
+
+<div style={{ display: "flex", width: "100%", flexWrap: "wrap" }}>
+  <img
+    src={camera1}
+    alt="camera1"
+    style={{ width: 350, height: 700, padding: 10 }}
+  />
+  <img
+    src={camera2}
+    alt="camera2"
+    style={{ width: 350, height: 700, padding: 10 }}
+  />
+  <img
+    src={camera3}
+    alt="camera3"
+    style={{ width: 350, height: 700, padding: 10 }}
+  />
+  <img
+    src={camera4}
+    alt="camera4"
+    style={{ width: 350, height: 700, padding: 10 }}
+  />
+</div>
+
+## 核心代码
+
+```javascript
+// import { StyleSheet } from 'react-native';
+import React from "react";
+import { StyleSheet, View, Image, Text, ScrollView } from "react-native";
+import { Button, Dialog } from "@rneui/themed";
+import * as ImagePicker from "expo-image-picker";
+import { useState, useEffect } from "react";
+import {
+  Camera,
+  CameraType,
+  AutoFocus,
+  FlashMode,
+  WhiteBalance,
+} from "expo-camera";
+import { BarCodeScanner } from "expo-barcode-scanner";
+import { Linking } from "react-native";
+import { Video, ResizeMode } from "expo-av";
+import * as MediaLibrary from "expo-media-library";
+import * as FileSystem from "expo-file-system";
+
+export default function CameraUse() {
+  const [selectedImage, setSelectedImage] =
+    useState <
+    any >
+    "https://img1.baidu.com/it/u=413643897,2296924942&fm=253&fmt=auto&app=138&f=JPEG?w=800&h=500";
+  const [type, setType] = useState(CameraType.back);
+  //相机权限
+  const [permission, requestPermission] = Camera.useCameraPermissions();
+  //是否展示相机弹窗
+  const [visible, setVisible] = useState(false);
+  //是否具备相机权限的标志
+  const [visibleFlag, setVisibleFlag] = useState(false);
+  const granted = permission && permission.granted;
+  //二维码权限
+  const [scanned, setScanned] = useState(false); // 二维码
+  //是否点击扫描二维码
+  const [isScanned, setIsScanned] = useState(false);
+  //是否点击录制视频
+  const [isRecord, setIsRecord] = useState(false);
+  //买克风权限
+  const [mpPermission, requestMPPermission] = Camera.useMicrophonePermissions();
+  //音视频相册写入权限
+  const [permissionMeResponse, requestMePermission] =
+    MediaLibrary.usePermissions();
+  const [recordStatusText, setRecordStatusText] = useState("未录制");
+  const [recordUri, setRecordUri] = useState(
+    "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4"
+  );
+  //视频对象
+  const video: any = React.useRef(null);
+  //相机对象
+  const [camerObj, setCamerObj] = useState < any > null;
+  const [status, setStatus] = useState < any > {};
+  let [scale, setZoom] = useState(0);
+  //下载进度
+  const [downloadProgress, setProgess] = useState(0);
+  function toggleCameraType() {
+    setType((current) =>
+      current === CameraType.back ? CameraType.front : CameraType.back
+    );
+  }
+  //图片上传
+  const pickImageAsync = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      allowsEditing: true,
+      quality: 1,
+    });
+
+    if (!result.canceled) {
+      setSelectedImage(result.assets[0].uri);
+      // console.log(result);
+    } else {
+      alert("You did not select any image.");
+    }
+  };
+  //拍照上传
+  const takePhotos = async () => {
+    // setVisible(true);
+    if (camerObj) {
+      let photo = await camerObj.takePictureAsync();
+      const uri = photo.uri;
+      setSelectedImage(uri);
+      reset();
+    }
+  };
+
+  //扫二维码
+  const handleBarCodeScanned = (params: any) => {
+    const { type, data } = params;
+    // alert(`Bar code with type ${type} and data ${data} has been scanned!`);
+    if (data) {
+      Linking.openURL(data);
+      reset();
+    }
+  };
+  //录制视频
+  const takeVideos = async () => {
+    // alert(JSON.stringify(mpPermission))
+    if (mpPermission && mpPermission.granted) {
+      setRecordStatusText("录制中");
+      const data = await camerObj.recordAsync();
+      const uri = data.uri;
+      // alert(uri);
+      setRecordUri(uri);
+      setRecordStatusText("录制完成");
+    }
+  };
+  //录制视频结束
+  const takeVideosEnd = async () => {
+    if (camerObj) {
+      await camerObj.stopRecording();
+      reset();
+    }
+  };
+  const reset = () => {
+    setVisible(false);
+    setScanned(false);
+    setIsScanned(false);
+    setZoom(0);
+    setType(CameraType.back);
+    setIsScanned(false);
+  };
+  function getActionContent() {
+    if (isScanned) {
+      //扫二维码
+      return (
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              marginBottom: 10,
+              color: "white",
+              marginLeft: 20,
+            }}
+            onPress={() => {
+              setScanned(true);
+            }}
+          >
+            开始扫码
+          </Text>
+        </View>
+      );
+    }
+    if (isRecord) {
+      //录视频
+      return (
+        <View style={{ marginTop: -30 }}>
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                marginBottom: 10,
+                color: "white",
+              }}
+            >
+              {recordStatusText}
+            </Text>
+          </View>
+          <View
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              flexDirection: "row",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                marginBottom: 10,
+                color: "white",
+              }}
+              onPress={takeVideos}
+            >
+              开始录制
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                marginBottom: 10,
+                color: "white",
+                marginLeft: 20,
+              }}
+              onPress={takeVideosEnd}
+            >
+              停止录制
+            </Text>
+            <Text
+              style={{
+                fontSize: 18,
+                marginBottom: 10,
+                color: "white",
+                marginLeft: 20,
+              }}
+              onPress={toggleCameraType}
+            >
+              反转
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return (
+      //拍照
+      <View style={{ marginTop: -60 }}>
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 50,
+              marginBottom: 10,
+              color: "white",
+            }}
+            onPress={() => {
+              if (scale < 10) {
+                scale += 1;
+              } else {
+                scale = 10;
+              }
+              setZoom(scale);
+            }}
+          >
+            +
+          </Text>
+          <Text
+            style={{
+              fontSize: 50,
+              marginBottom: 10,
+              color: "white",
+              marginLeft: 50,
+            }}
+            onPress={() => {
+              if (scale > 1) {
+                scale -= 1;
+              } else {
+                scale = 0;
+              }
+              setZoom(scale);
+            }}
+          >
+            -
+          </Text>
+        </View>
+        <View
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+          }}
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              marginBottom: 10,
+              color: "white",
+            }}
+            onPress={takePhotos}
+          >
+            开始拍照
+          </Text>
+          <Text
+            style={{
+              fontSize: 18,
+              marginBottom: 10,
+              color: "white",
+              marginLeft: 20,
+            }}
+            onPress={toggleCameraType}
+          >
+            反转
+          </Text>
+        </View>
+      </View>
+    );
+  }
+  const isVisibleByPower: any = async () => {
+    if (camerObj) {
+      const camer = await camerObj.getCameraPermissionsAsync();
+      if (camer && camer.granted) {
+        if (isScanned) {
+          //如果是扫码，也不需要处理
+        }
+        if (isRecord) {
+          //如果是录制视频，则需要允许音频
+          const mp = await camerObj.requestMicrophonePermissionsAsync();
+          return mp && mp.granted && camer.granted;
+        }
+
+        //默认是允许拍照上传
+        return true;
+      }
+    }
+    return false;
+  };
+  useEffect(() => {
+    // alert('111')
+    if (visible && isVisibleByPower()) {
+      setVisibleFlag(true);
+    }
+    if (!(permission && permission.granted)) {
+      // Camera permissions are not granted yet
+      requestPermission();
+    }
+    if (!(mpPermission && mpPermission.granted)) {
+      requestMPPermission();
+    }
+    return () => {
+      setVisibleFlag(false);
+    };
+  }, [visible]);
+  if (!permission) {
+    // Camera permissions are still loading
+    return <View />;
+  }
+  return (
+    <ScrollView>
+      <View style={styles.container}>
+        {/* 图片 */}
+        <View style={styles.imageContainer}>
+          <Image
+            source={{ uri: selectedImage }}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
+        {/* 视频 */}
+        <View>
+          <Video
+            ref={video}
+            style={styles.video}
+            source={{
+              uri: recordUri,
+            }}
+            useNativeControls
+            resizeMode={ResizeMode.COVER}
+            isLooping
+            onPlaybackStatusUpdate={(status) => setStatus(() => status)}
+          />
+        </View>
+        {/* 一排按钮 */}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            marginTop: 20,
+            justifyContent: "center",
+          }}
+        >
+          <View style={{ width: 120, marginLeft: 20 }}>
+            <Button onPress={pickImageAsync}>从相册选择</Button>
+          </View>
+          <View style={{ marginLeft: 20, width: 120 }}>
+            <Button
+              onPress={() => {
+                setIsScanned(false);
+                setIsRecord(false);
+                setVisible(true);
+                if (!permission.granted) {
+                  // Camera permissions are not granted yet
+                  requestPermission();
+                } else {
+                }
+              }}
+            >
+              拍照上传
+            </Button>
+          </View>
+        </View>
+        {/* 二排按钮 */}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            marginTop: 20,
+            justifyContent: "center",
+          }}
+        >
+          <View style={{ marginLeft: 20, width: 120 }}>
+            <Button
+              onPress={() => {
+                setIsScanned(true);
+                setVisible(true);
+                if (!permission.granted) {
+                  // Camera permissions are not granted yet
+                  requestPermission();
+                } else {
+                }
+              }}
+            >
+              扫二维码
+            </Button>
+          </View>
+          <View style={{ marginLeft: 20, width: 120 }}>
+            <Button
+              onPress={() => {
+                if (video && video.current) {
+                  video.current.pauseAsync();
+                }
+                setIsRecord(true);
+                setVisible(true);
+                setRecordStatusText("未录制");
+
+                if (!permission.granted) {
+                  requestPermission();
+                }
+                if (!(mpPermission && mpPermission.granted)) {
+                  requestMPPermission();
+                }
+              }}
+            >
+              录制视频
+            </Button>
+          </View>
+        </View>
+        {/* 三排按钮 */}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            marginTop: 20,
+            justifyContent: "center",
+            // alignItems:'center'
+          }}
+        >
+          <View style={{ width: 120, marginLeft: 20 }}>
+            <Button
+              onPress={() =>
+                status.isPlaying
+                  ? video.current.pauseAsync()
+                  : video.current.playAsync()
+              }
+            >
+              {!status.isPlaying ? "播放视频" : "停止视频"}
+            </Button>
+          </View>
+          <View style={{ width: 120, marginLeft: 20 }}>
+            <Button
+              onPress={() =>
+                setRecordUri(
+                  "https://d23dyxeqlo5psv.cloudfront.net/big_buck_bunny.mp4"
+                )
+              }
+            >
+              恢复默认视频
+            </Button>
+          </View>
+        </View>
+        {/* 四排按钮 */}
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            marginTop: 20,
+            justifyContent: "center",
+            // alignItems:'center'
+          }}
+        >
+          <View style={{ width: 120, marginLeft: 20 }}>
+            <Button
+              onPress={async () => {
+                if (
+                  !(
+                    permissionMeResponse &&
+                    permissionMeResponse.accessPrivileges == "all"
+                  )
+                ) {
+                  requestMePermission();
+                }
+                // const { uri } = await Camera.takePictureAsync();
+                if (
+                  selectedImage.startsWith("http") ||
+                  selectedImage.startsWith("https")
+                ) {
+                  //处理网络图片
+                  const callback = (downloadProgress: any) => {
+                    const progress =
+                      downloadProgress.totalBytesWritten /
+                      downloadProgress.totalBytesExpectedToWrite;
+                    setProgess(progress);
+                  };
+
+                  const downloadResumable = FileSystem.createDownloadResumable(
+                    selectedImage,
+                    FileSystem.documentDirectory + "download.png",
+                    {},
+                    callback
+                  );
+                  try {
+                    const photoData: any =
+                      await downloadResumable.downloadAsync();
+                    const uri = photoData.uri;
+                    const asset = await MediaLibrary.createAssetAsync(uri);
+                    alert(JSON.stringify(asset));
+                    // setProgess(0);
+                  } catch (e) {
+                    alert(e);
+                  }
+                } else {
+                  const asset = await MediaLibrary.createAssetAsync(
+                    selectedImage
+                  );
+                  alert(JSON.stringify(asset));
+                }
+              }}
+            >
+              {`下载图片(${downloadProgress})`}
+            </Button>
+          </View>
+          <View style={{ width: 120, marginLeft: 20 }}>
+            <Button
+              onPress={async () => {
+                if (
+                  !(
+                    permissionMeResponse &&
+                    permissionMeResponse.accessPrivileges == "all"
+                  )
+                ) {
+                  requestMePermission();
+                }
+                if (
+                  selectedImage.startsWith("http") ||
+                  selectedImage.startsWith("https")
+                ) {
+                  //处理网络视频
+                  const callback = (downloadProgress: any) => {
+                    const progress =
+                      downloadProgress.totalBytesWritten /
+                      downloadProgress.totalBytesExpectedToWrite;
+                    setProgess(progress);
+                  };
+
+                  const downloadResumable = FileSystem.createDownloadResumable(
+                    recordUri,
+                    FileSystem.documentDirectory + "download.mp4",
+                    {},
+                    callback
+                  );
+                  try {
+                    const photoData: any =
+                      await downloadResumable.downloadAsync();
+                    const uri = photoData.uri;
+                    const asset = await MediaLibrary.createAssetAsync(uri);
+                    alert(JSON.stringify(asset));
+                    setProgess(0);
+                  } catch (e) {
+                    alert(e);
+                  }
+                } else {
+                  const asset = await MediaLibrary.createAssetAsync(recordUri);
+                  alert(JSON.stringify(asset));
+                }
+              }}
+            >
+              {`下载视频(${downloadProgress})`}
+            </Button>
+          </View>
+        </View>
+      </View>
+      <Dialog
+        isVisible={visible && visibleFlag}
+        overlayStyle={{
+          height: "100%",
+          width: "100%",
+          backgroundColor: "black",
+        }}
+        onBackdropPress={() => {
+          reset();
+        }}
+      >
+        <Dialog.Title title="相机" />
+        {visible && (
+          <View>
+            <Camera
+              style={{ height: "90%" }}
+              type={type}
+              flashMode={FlashMode.auto}
+              barCodeScannerSettings={{
+                barCodeTypes: [BarCodeScanner.Constants.BarCodeType.qr],
+              }}
+              onBarCodeScanned={!scanned ? undefined : handleBarCodeScanned}
+              autoFocus={AutoFocus.on}
+              focusDepth={0}
+              ref={(el: any) => setCamerObj(el)}
+              whiteBalance={WhiteBalance.sunny}
+              zoom={scale / 10}
+              onMountError={(e) => {
+                requestPermission();
+                requestMPPermission();
+                // alert(JSON.stringify(e))
+              }}
+            ></Camera>
+          </View>
+        )}
+        {getActionContent()}
+        <View style={{ position: "absolute", right: 20, top: 20 }}>
+          <Text
+            style={{ color: "white" }}
+            onPress={() => {
+              reset();
+            }}
+          >
+            关闭
+          </Text>
+        </View>
+      </Dialog>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: "column",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    marginTop: 20,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: "bold",
+  },
+  separator: {
+    marginVertical: 30,
+    height: 1,
+    width: "80%",
+  },
+  imageContainer: {
+    // flex: 1,
+    // paddingTop: 58,
+    // backgroundColor:'red'
+  },
+  image: {
+    width: 300,
+    height: 400,
+    borderRadius: 18,
+  },
+  footerContainer: {
+    flex: 1 / 3,
+    alignItems: "center",
+  },
+  camera: {
+    flex: 1,
+  },
+  video: {
+    alignSelf: "center",
+    marginTop: 20,
+    width: 320,
+    height: 200,
+  },
+  buttons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
+```
+
+## 注意事项
+
+### 配置权限许可
+
+```javascript
+//app.json ios权限申请提示消息
+{
+  "expo": {
+    "plugins": [
+        [
+        "expo-image-picker",
+        {
+          "photosPermission": "custom photos permission",
+          "cameraPermission": "Allow $(PRODUCT_NAME) to open the camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera.",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone"
+        }
+      ],
+      [
+        "expo-barcode-scanner",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access camera."
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photos.",
+          "savePhotosPermission": "Allow $(PRODUCT_NAME) to save photos.",
+          "isAccessMediaLocationEnabled": true
+        }
+      ],]
+  }
+}
+```
+
+## 踩坑记录
+
+1、当相机的权限选择的是允许本次运行的时候，APP 保持运行状态，过段时间再打开 APP，发现相机无法唤醒/黑屏问题。
+
+问题的原因是授权过期了，无法取到权限对象
+
+解决方案，相机抛出异常并且没有相机权限的时候，重新获取权限；在每次进入相机弹窗之前，先检查一下相机权限是否存在。
+
+```javascript
+<Camera
+  style={{ height: "90%" }}
+  type={type}
+  flashMode={FlashMode.auto}
+  barCodeScannerSettings={{
+    barCodeTypes: [BarCodeScanner.Constants.BarCodeType.qr],
+  }}
+  onBarCodeScanned={!scanned ? undefined : handleBarCodeScanned}
+  autoFocus={AutoFocus.on}
+  focusDepth={0}
+  ref={(el: any) => setCamerObj(el)}
+  whiteBalance={WhiteBalance.sunny}
+  zoom={scale / 10}
+  onMountError={(e) => {
+    requestPermission();
+    requestMPPermission();
+    // alert(JSON.stringify(e))
+  }}
+></Camera>
+```
+
+```javascript
+
+  useEffect(() => {
+    // alert('111')
+    if (visible && isVisibleByPower()) {
+      setVisibleFlag(true);
+    }
+    if (!(permission && permission.granted)) {
+      // Camera permissions are not granted yet
+      requestPermission();
+    }
+    if (!(mpPermission && mpPermission.granted)) {
+      requestMPPermission();
+    }
+    return () => {
+      setVisibleFlag(false);
+    };
+  }, [visible]);
+```
