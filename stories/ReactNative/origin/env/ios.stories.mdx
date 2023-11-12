@@ -1,0 +1,31 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/react-native/原生/环境搭建/ios" />
+
+## 原生ios环境
+
+需要下载xcode，下载xcode之前，先检查下自己的mac系统是否是最新的，如果不是先更新一下，否则后面更新了系统，xcode需要重新下载。
+
+按照官网的链接依次安装环境：https://reactnative.cn/docs/environment-setup
+
+注意要使用 brew install cocoapods 来安装cocoapods ，不要用gem，问题实在太多了。安装完之后，发现要求ruby的版本一般需要大于3
+
+如果是zshrc，依次执行下列命令
+
+```shell
+
+ brew link --overwrite cocoapods
+
+ brew link --overwrite ruby 
+
+ echo 'export PATH="/usr/local/opt/ruby/bin:$PATH"' >> ~/.zshrc
+
+source  ~/.zshrc
+
+```
+
+如果是bash shell把zshrc 换成对应的文件即可。
+
+最后，需要重新用react-cli初始化一个项目，不然老的原生依赖无法编译通过，或者尝试一下去ios目录下执行一下npx pod install命令能否跑起来项目
+
