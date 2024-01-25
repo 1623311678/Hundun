@@ -15,6 +15,7 @@ import {
   Button
 } from "antd-mobile"
 import "./home.scss"
+import { toDp } from "@src/utils"
 const SwiperStyle = {
   height: 200,
   display: "flex",
@@ -23,7 +24,10 @@ const SwiperStyle = {
 }
 function Home() {
   return (
-    <div style={{ width: "7.5rem" }}>
+    <div style={{ width: "7.5rem", background: "red" }}>
+      <div style={{ fontSize: toDp(20) }}>字体测试1</div>
+      <div style={{ fontSize: "0.2rem" }}>字体测试2</div>
+      <div style={{ fontSize: "20px" }}>字体测试3</div>
       <Swiper
         spaceBetween={0}
         // slidesPerView={1}

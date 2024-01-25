@@ -92,7 +92,7 @@
       width = mobileDesignWidth * dpr
     }
     // 750/100 = 7.5
-    var rem = width / (mobileDesignWidth / 100)
+    var rem = width * 100  / mobileDesignWidth 
     docEl.style.fontSize = rem + "px"
     flexible.rem = win.rem = rem
   }
