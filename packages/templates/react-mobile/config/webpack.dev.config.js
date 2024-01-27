@@ -5,7 +5,7 @@ const Base = require('./webpack.base.config')
 
 const resolve = path.resolve.bind(path, __dirname);
 
-const dashboardBuildPath = path.resolve(__dirname,'../dist')
+const dashboardBuildPath = path.resolve(__dirname, '../dist')
 const fileLoaderPath = "file-loader?name=[name].[ext]";
 const devConfig = {
   devServer: {
@@ -25,9 +25,9 @@ const devConfig = {
     hot: true,
     port: 9002
   },
-  mode:'development',
-  devtool:  "sourceMap",
-  output:{
+  mode: 'development',
+  devtool: "sourceMap",
+  output: {
     chunkFilename: "[name].js",
     filename: "[name].js",
     path: resolve(dashboardBuildPath),
@@ -52,8 +52,8 @@ const devConfig = {
       },
       {
         include: [
-          path.resolve(__dirname,'../node_modules'),
-          path.resolve(__dirname,'../assets'),
+          path.resolve(__dirname, '../node_modules'),
+          path.resolve(__dirname, '../assets'),
         ],
         loader: fileLoaderPath,
         test: /\.(eot|otf|png|gif|svg|jpg|ttf|woff|woff2)(\?v=[0-9.]+)?$/
@@ -64,10 +64,19 @@ const devConfig = {
           "style-loader",
           "css-loader",
           {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                config: path.resolve(__dirname, '../postcss.config.js'),
+              },
+            },
+          },
+          {
             loader: "less-loader",
             options: {
               lessOptions: {
-                javascriptEnabled: true
+                javascriptEnabled: true,
+                "math": "always"
               }
             }
           }
@@ -76,4 +85,4 @@ const devConfig = {
     ]
   }
 }
-module.exports = merge(Base,devConfig)
+module.exports = merge(Base, devConfig)

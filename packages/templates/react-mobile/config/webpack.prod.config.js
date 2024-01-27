@@ -50,10 +50,19 @@ const prodConfig =  {
           MiniCssExtractPlugin.loader,
           "css-loader",
           {
+            loader: 'postcss-loader',
+            options: {
+              postcssOptions: {
+                config: path.resolve(__dirname, '../postcss.config.js'),
+              },
+            },
+          },
+          {
             loader: "less-loader",
             options: {
               lessOptions: {
-                javascriptEnabled: true
+                javascriptEnabled: true,
+                "math": "always"
               }
             }
           }

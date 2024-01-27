@@ -14,7 +14,7 @@ import {
   Space,
   Button
 } from "antd-mobile"
-import "./home.scss"
+import "./home.less"
 import { toDp } from "@src/utils"
 const SwiperStyle = {
   height: 200,
@@ -24,10 +24,9 @@ const SwiperStyle = {
 }
 function Home() {
   return (
-    <div style={{ width: "7.5rem", background: "red" }}>
-      <div style={{ fontSize: toDp(20) }}>字体测试1</div>
-      <div style={{ fontSize: "0.2rem" }}>字体测试2</div>
+    <div style={{ width: "3.75rem" }}>
       <div style={{ fontSize: "20px" }}>字体测试3</div>
+      <div className="home-title">字号</div>
       <Swiper
         spaceBetween={0}
         // slidesPerView={1}
@@ -66,13 +65,8 @@ function Home() {
       <div>
         <Rate onChange={val => Toast.show(val.toString())} />
       </div>
-
       <Rate allowHalf defaultValue={2.5} />
-      <NumberKeyboard
-        visible={true}
-        showCloseButton={false}
-        confirmText="确定"
-      />
+      <div style={{ height: "5rem", background: "blue" }}></div>
     </div>
   )
 }

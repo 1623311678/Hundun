@@ -8,6 +8,7 @@
   "author": "junkai wang",
   "homepage": "https://github.com/1623311678/Hundun",
   "dependencies": {
+    "less": "^3.13.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },

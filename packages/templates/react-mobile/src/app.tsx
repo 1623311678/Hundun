@@ -1,7 +1,7 @@
 import React, { FC, useEffect } from "react"
 import { createRoot } from "react-dom/client"
 import LayoutRouter from "@src/router"
-import { BrowserRouter } from "react-router-dom"
+import { HashRouter } from "react-router-dom"
 import store from "./store"
 import { Provider, useSelector } from "react-redux"
 import "./app.less"
@@ -16,12 +16,25 @@ const App: FC = () => {
   // const token = useSelector((state: any) => {
   //   return state.userInfo.token
   // })
+  // 获取屏幕宽度
+  useEffect(() => {
+    const screenWidth =
+      window.innerWidth ||
+      document.documentElement.clientWidth ||
+      document.body.clientWidth
+    // 将屏幕宽度传递给 Less 变量
+    document.documentElement.style.setProperty(
+      "--screen-width",
+      `${screenWidth}`
+    )
+  }, [])
+
   return (
-    <BrowserRouter>
+    <HashRouter>
       <div style={{ display: "flex" }}>
         <LayoutRouter></LayoutRouter>
       </div>
-    </BrowserRouter>
+    </HashRouter>
   )
 }
 const rootDom = document.getElementById("root")
