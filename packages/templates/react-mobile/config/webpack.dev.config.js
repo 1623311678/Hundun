@@ -5,16 +5,15 @@ const Base = require('./webpack.base.config')
 
 const resolve = path.resolve.bind(path, __dirname);
 
-const dashboardBuildPath = path.resolve(__dirname, '../dist')
 const fileLoaderPath = "file-loader?name=[name].[ext]";
 const devConfig = {
   devServer: {
     host: '0.0.0.0',
     disableHostCheck: true,
     compress: true,
-    contentBase: path.join(__dirname, dashboardBuildPath),
-    historyApiFallback: true,
+    // historyApiFallback: true,
     open: true,
+    openPage: ['pageA.html',],  // 指定要打开的页面
     proxy: {
       "/api": {
         target: "http://localhost:3000",
@@ -30,8 +29,8 @@ const devConfig = {
   output: {
     chunkFilename: "[name].js",
     filename: "[name].js",
-    path: resolve(dashboardBuildPath),
-    publicPath: "/"
+    path: path.resolve(__dirname, '../dist'),
+    // publicPath: "./",
   },
   module: {
     rules: [

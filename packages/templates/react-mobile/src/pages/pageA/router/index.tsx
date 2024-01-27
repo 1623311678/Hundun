@@ -5,8 +5,8 @@ import {
   Switch,
   Redirect
 } from "react-router-dom"
-import Home from "@src/pages/Home"
-import NotFound from "@src/pages/404"
+import Home from "@src/pages/pageA/Home"
+import NotFound from "@src/pages/pageA/404"
 
 const routes = [
   { path: "/", compoment: Home },

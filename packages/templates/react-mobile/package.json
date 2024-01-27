@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "cross-env webpack-dev-server -d --mode development --config config/webpack.dev.config.js",
-    "build": "rm -rf dist && cross-env NODE_ENV=production webpack -p --display=minimal --config config/webpack.prod.config.js"
+    "build": "cross-env NODE_ENV=production webpack -p --display=minimal --config config/webpack.prod.config.js"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^1.8.5",
@@ -83,6 +83,7 @@
     "babel-plugin-react-intl": "^5.1.11",
     "babel-plugin-react-intl-auto": "^3.1.0",
     "browser-sync": "^2.26.14",
+    "clean-webpack-plugin": "^4.0.0",
     "codecov": "^3.7.1",
     "copy-webpack-plugin": "^5.1.2",
     "core-js": "^3.7.0",

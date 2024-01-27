@@ -1,0 +1,30 @@
+@import '@src/theme.less';
+/*去掉默认样式*/
+.swiper-button-prev:after{
+    display: none;
+}
+.swiper-button-next:after{
+    display: none;
+}
+/*自定义样式*/
+.swiper-button-prev{
+    width: 10px;
+    height: 10px;
+    // background: url('../images/left-arrow.svg');
+    background: black;
+    left: 10px;
+    top:60%;
+}
+ 
+.swiper-button-next{
+    width: 10px;
+    height: 10px;
+    background: black;
+    // background:url('../images/right-arrow.svg');
+    right: 10px;
+    top:60%;
+}
+.home-title{
+    font-size: @font-size-base;
+    margin-left:175px
+}

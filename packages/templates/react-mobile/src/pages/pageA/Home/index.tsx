@@ -25,7 +25,7 @@ const SwiperStyle = {
 function Home() {
   return (
     <div style={{ width: "3.75rem" }}>
-      <div style={{ fontSize: "20px" }}>字体测试3</div>
+      <div style={{ fontSize: "20px" }}>pageA</div>
       <div className="home-title">字号</div>
       <Swiper
         spaceBetween={0}
