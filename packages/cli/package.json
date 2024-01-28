@@ -1,6 +1,6 @@
 {
   "name": "hundun-cli",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "混沌工程化-脚手架",
   "main": "./src/index.js",
   "bin": {
@@ -16,6 +16,7 @@
     "commander": "^8.3.0",
     "hundun-templates": "0.0.3",
     "inquirer": "^8.2.0",
+    "rimraf": "^5.0.5",
     "semver": "^7.3.7"
   },
   "keywords": [
