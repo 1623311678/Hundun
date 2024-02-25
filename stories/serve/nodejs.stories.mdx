@@ -1,0 +1,99 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/nodejs" />
+
+## nodejs mvc 架构
+
+本文以前端视角介绍如何构建后端系统，如何设计系统。混沌工程化提供了koa-mvc架构模版项目。
+
+### 1、项目下载 
+
+#### 1.1 CLI下载
+
+参考 [快速开始](http://hundun.site/?path=/docs/hundun-%E8%84%9A%E6%89%8B%E6%9E%B6-%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B--page)
+之后选择 【基于node-koa以及mysql的mvc服务端项目】项目模版即可
+
+#### 1.2 GitHub　下载
+也可以去github下载 链接：https://github.com/1623311678/koa-mvc
+
+### 2、目录介绍
+
+```javascript
+
+root
+  |-client // 前端示例代码
+  |-package.json //
+  |-src // nodejs后端核心代码
+    |--constant // 常量
+    |--constroller // 控制层
+            |--asset.js //资产模块
+            |--user.js //用户模块
+    |--db // 数据库相关
+        |--api // 模型操作逻辑
+            |--asset.js // 资产模块CRUD
+            |--user.js // 用户模块CRUD
+        |--models // 数据库模型
+            |--asset.js // 资产模型，查询携带用户模型
+            |--user.js // 用户模型，查询携带用户资产
+        |--dbConn.js // 数据库连接脚本
+        |--syncTable.js // 同步表结构
+    |-middleware // 中间件
+        |--logger.js // 调用记录
+        |--verifyToken.js // token验证
+    |--app.js // 入口
+    |--router.js //路由
+
+
+```
+
+### 3、准备工作
+
+mysql的安装，推荐docker安装
+
+### 4、项目启动
+
+#### 4.1 服务启动
+
+根目录下执行
+
+```shell
+# 安装依赖
+
+npm install 
+
+# 先同步数据库
+npm run sync
+
+# 然后再启动服务
+
+npm start
+
+```
+#### 4.2 前端启动
+
+进入client目录下，依次执行
+
+```shell
+
+# 安装依赖
+
+npm install 
+
+# 启动前端服务
+
+npm start
+```
+
+#### 4.3 结果展示
+
+<img src={mvcPng} alt="mvcPng" style={{ width: 1080, height: 500 }} />
+
+### 5 系统架构设计
+
+<img src={mvcFlowPng} alt="mvcFlowPng" style={{ width: 1080, height: 500 }} />
+
+
+
+
