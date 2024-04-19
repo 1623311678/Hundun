@@ -1,0 +1,101 @@
+import { Meta } from "@storybook/addon-docs";
+
+<Meta title="Hundun/标准化模版/UI组件库/Vue2.0业务组件库" />
+
+# Vue2.0 + Element-UI 业务组件库
+
+## 1.综述
+
+Vue2.0 业务组件库采用当下流行的Vue2.0+Element-UI框架，借助Rollup以及babel-plugin-component来实现按需引入，支持scss、less等。
+
+## 2.创建
+
+```shell
+hundun create my-app
+#如果没有安装hundun-cli可以运行sudo npm install hundun-cli -g来安装，之后再执行创建命令即可
+
+# 执行命令之后，选择【基于Rollup+Vue2.0+Element-UI可按需引入的业务组件库模拟】选项即可
+
+# 注意，UI组件库执行npm run build的时候，node版本要大于16，因为用的rollup比较新
+```
+
+## 3.目录介绍
+
+
+```javascript
+｜--root//根目录
+    |--Demo // 可以跑组件库的Vue 应用，进入该目录后，npm install 安装依赖，之后执行npm start即可，node版本要求14
+    |--docs // 文档，使用vuepress起来的快速应用，node版本要大于18，目前该版本太高，无法跑Vue2.0的组件，写一下mdx转换成html还是可以的
+    |--dist // 打包之后的目录，最终会传递到npm上
+    |--src//组件资源
+        |--index.js // 入口
+        |--components
+                |--h-d-button // button组件，固定这样命名，方便babel-plugin-component 按需引入
+                            |--index.Vue //固定这样写
+                            |--style.scss
+                |--h-d-input // input 组件 
+                            |--index.vue
+      
+    |--package.json
+    |--rollup.prod.config.js // rollup构建配置
+    |--package-lock.json
+    |--README.md
+```
+## 4、使用
+
+### 4.1 babelrc配置
+
+```javascript
+
+// 使用的是babel7
+
+{
+  "presets": [
+    ["@babel/preset-env", { "modules": false }]
+  ],
+  "plugins": [
+    [
+      "component",
+      {
+        "libraryName": "element-ui",
+        "styleLibraryName": "theme-chalk"
+      },
+      "element-ui"
+    ],
+    [
+      "component",
+      {
+        "libraryName": "hundun-ui-library",
+        "libDir": "dist/lib/components",
+        "libraryDirectory": "components",
+        "style": false
+      },
+      "hundun-ui-library"
+    ]
+  ]
+}
+
+```
+
+### 4.2 业务引入
+
+```javascript
+
+// main.js 或者对应的入口全局注册
+
+import { HDButton } from 'hundun-ui-library'
+
+Vue.component('h-d-button', HDButton); // 全局注册 HDButton 组件
+
+// home.vue
+
+<h-d-button>混沌 </h-d-button>
+
+```
+
+
+
+
+
+
+
