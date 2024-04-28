@@ -1,6 +1,6 @@
 {
   "name": "hundun-cli",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "混沌工程化-脚手架",
   "main": "./src/index.js",
   "bin": {

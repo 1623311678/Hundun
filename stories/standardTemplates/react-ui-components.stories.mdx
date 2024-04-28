@@ -1,13 +1,13 @@
 import { Meta } from "@storybook/addon-docs";
-import vueUIPng from "../assets/vue-ui.png";
+import reactUIPng from "../assets/react-ui.png";
 
-<Meta title="Hundun/标准化模版/UI组件库/Vue2.0业务组件库" />
+<Meta title="Hundun/标准化模版/UI组件库/react18业务组件库" />
 
-# Vue2.0 + Element-UI 业务组件库
+# React18 + Antd5.x 业务组件库
 
 ## 1.综述
 
-Vue2.0 业务组件库采用当下流行的Vue2.0+Element-UI框架，借助Rollup以及babel-plugin-component来实现按需引入，支持scss、less等,文档采用vuepress书写。
+React18 业务组件库采用当下流行的 React18 + Antd5.x框架，借助Rollup以及babel-plugin-component来实现按需引入，支持scss、less等，文档采用storybook书写。
 
 ## 2.创建
 
@@ -15,7 +15,7 @@ Vue2.0 业务组件库采用当下流行的Vue2.0+Element-UI框架，借助Rollu
 hundun create my-app
 #如果没有安装hundun-cli可以运行sudo npm install hundun-cli -g来安装，之后再执行创建命令即可
 
-# 执行命令之后，选择【基于Rollup+Vue2.0+Element-UI可按需引入的业务组件库模拟】选项即可
+# 执行命令之后，选择【基于Rollup+React18+antd5可按需引入的业务组件库模拟】选项即可
 
 # 注意，UI组件库执行npm run build的时候，node版本要大于16，因为用的rollup比较新
 ```
@@ -30,23 +30,26 @@ hundun create my-app
     |--docs // 文档，使用vuepress起来的快速应用，node版本要大于18，目前该版本太高，无法跑Vue2.0的组件，写一下mdx转换成html还是可以的
     |--dist // 打包之后的目录，最终会传递到npm上
     |--src//组件资源
-        |--index.js // 入口
+        |--index.ts // 入口
         |--components
-                |--h-d-button // button组件，固定这样命名，方便babel-plugin-component 按需引入
-                            |--index.Vue //固定这样写
-                            |--style.scss
+                |--h-d-button // button组件，固定这样命名，
+                            |--index.tsx //固定这样写
+                            |--type.d.ts //声明
+                            |--style.scss // 样式
                 |--h-d-input // input 组件 
-                            |--index.vue
+                            |--index.tsx
+                            |--type.d.ts
       
     |--package.json
     |--rollup.prod.config.js // rollup构建配置
     |--package-lock.json
     |--README.md
+    |--tsconfig.json // ts配置
 ```
 
 ### 3.2架构介绍
 
-<img style={{ width: 800, height: 500, objectFit: "contain" }} src={vueUIPng}/>
+<img style={{ width: 800, height: 500, objectFit: "contain" }} src={reactUIPng}/>
 
 ### 3.3 发布
 
@@ -65,23 +68,19 @@ npm run build之后，npm publish就可以发布，不过要绑定自己的账�
     ["@babel/preset-env", { "modules": false }]
   ],
   "plugins": [
+  ["import", {
+      "libraryName": "antd",
+      "style": true // 或者 "css"
+    }],
     [
       "component",
       {
-        "libraryName": "element-ui",
-        "styleLibraryName": "theme-chalk"
-      },
-      "element-ui"
-    ],
-    [
-      "component",
-      {
-        "libraryName": "hundun-ui-library",
-        "libDir": "dist/lib/components",
+        "libraryName": "hundun-ui-library-react",
+        "libDir": "dist/components",
         "libraryDirectory": "components",
         "style": false
       },
-      "hundun-ui-library"
+      "hundun-ui-library-react"
     ]
   ]
 }
@@ -92,16 +91,26 @@ npm run build之后，npm publish就可以发布，不过要绑定自己的账�
 
 ```javascript
 
-// main.js 或者对应的入口全局注册，整体参考Demo目录下用法
+// app.tsx 或者对应的入口全局注册，整体参考Demo目录下用法
 
-import { HDButton } from 'hundun-ui-library'
+import "hundun-ui-library-react/dist/hundun-ui-library-react.css"
 
-Vue.component('h-d-button', HDButton); // 全局注册 HDButton 组件
+```
+```javascript
 
-// home.vue
+// home.tsx
 
-<h-d-button>混沌 </h-d-button>
+import React from 'react'
+import { HDButton } from "hundun-ui-library-react"
 
+function Home() {
+  return (
+    <div>
+      <HDButton text="深化开始的"></HDButton>
+    </div>
+  )
+}
+export default Home
 ```
 ### 5 Node版本问题
 
