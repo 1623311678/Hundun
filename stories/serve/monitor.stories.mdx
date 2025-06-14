@@ -1,0 +1,214 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/后端监控" />
+
+## 完整的后端监控系统
+
+### 1. 需要监控的核心指标
+- **基础资源**：CPU、内存、磁盘、网络、负载、端口存活
+- **应用服务**：接口响应时间、QPS、错误率、超时、慢请求、线程池、连接池
+- **数据库**：连接数、慢SQL、主从延迟、QPS、TPS、缓存命中率
+- **中间件**：MQ堆积、消费延迟、失败率、Redis命中率、队列长度
+- **日志监控**：异常日志、关键业务日志、告警日志
+- **业务指标**：订单量、注册量、转化率、支付成功率等
+- **可用性**：服务存活、健康检查、自动重启、流量切换
+- **安全**：异常登录、接口攻击、SQL注入、权限变更
+
+---
+
+### 2. 主流开源监控软件
+- **Prometheus**：时序数据采集与告警，配合Grafana可视化，适合云原生、微服务
+- **Grafana**：强大的可视化仪表盘，支持多数据源
+- **ELK/EFK（Elasticsearch + Logstash/Fluentd + Kibana）**：日志采集、检索、分析
+- **Zabbix**：传统IT基础设施监控，支持多种协议和自定义脚本
+- **Alertmanager**：Prometheus告警管理
+- **Jaeger/Zipkin/SkyWalking**：分布式链路追踪，APM
+- **Node Exporter/JMX Exporter/Blackbox Exporter**：系统、JVM、接口探活等指标采集
+- **VictoriaMetrics/Thanos**：Prometheus数据高可用与长时存储
+
+---
+
+### 3. 大厂主流监控工具/平台
+- **阿里云云监控（CloudMonitor）**：主机、数据库、应用、业务、日志、告警一体化
+- **腾讯云云监控（CM）**：资源、应用、业务、日志、APM、可观测一体化
+- **华为云云监控**：基础设施、应用、业务、日志、APM
+- **AWS CloudWatch**：云资源、应用、日志、告警、自动伸缩
+- **Azure Monitor**：云资源、应用、日志、APM
+- **Google Cloud Operations Suite（Stackdriver）**：监控、日志、APM
+- **Datadog/New Relic/Sentry**：国际主流SaaS监控平台，支持多云多语言
+
+---
+
+### 4. 典型监控系统架构
+```
+[Exporter/Agent] → [Prometheus/Zabbix/云监控] → [时序库/日志库] → [Grafana/Kibana/云平台] → [Alertmanager/告警]
+```
+
+---
+
+> 完整的后端监控体系需覆盖基础资源、应用、数据库、中间件、日志、业务、安全等全链路，推荐开源+云平台结合，满足不同规模和场景需求。
+
+## 后端监控系统落地实践（详细方案）
+
+### 1. 需要监控哪些内容？
+- **基础资源**：CPU、内存、磁盘、网络、主机存活
+- **应用服务**：接口响应时间、QPS、错误率、慢请求、线程池、连接池
+- **数据库**：连接数、慢SQL、主从延迟、QPS、TPS、缓存命中率
+- **中间件**：MQ堆积、消费延迟、Redis命中率、队列长度
+- **日志监控**：异常日志、关键业务日志、告警日志
+- **业务指标**：订单量、注册量、转化率、支付成功率等
+- **安全**：异常登录、接口攻击、SQL注入、权限变更
+
+---
+
+### 2. 监控平台选型建议
+- **开源组合**：Prometheus + Grafana + Alertmanager + ELK（Elasticsearch/Logstash/Kibana）
+  - 适合自建、可高度定制、无授权费用
+- **云平台**：阿里云云监控、腾讯云云监控、AWS CloudWatch、Datadog等
+  - 适合云上资源、快速集成、自动化运维
+- **混合方案**：开源+云平台结合，满足多云/本地/定制需求
+
+---
+
+### 3. 典型开源监控系统搭建与配置（以Prometheus+Grafana+Alertmanager+ELK为例）
+
+#### 步骤一：部署Exporter/Agent采集指标
+- **Node Exporter**：采集主机CPU、内存、磁盘、网络等
+  ```sh
+  # 安装
+  wget https://github.com/prometheus/node_exporter/releases/download/v*/node_exporter-*.tar.gz
+  tar -zxvf node_exporter-*.tar.gz
+  ./node_exporter &
+  # 默认9100端口
+  ```
+- **JMX Exporter**：采集JVM/Java应用指标
+- **Blackbox Exporter**：接口探活、外部探测
+- **MySQL Exporter/Redis Exporter**：采集数据库/缓存指标
+
+#### 步骤二：部署Prometheus采集与存储指标
+- **prometheus.yml配置示例**
+  ```yaml
+  global:
+    scrape_interval: 15s
+  scrape_configs:
+    - job_name: 'node'
+      static_configs:
+        - targets: ['localhost:9100']
+    - job_name: 'mysql'
+      static_configs:
+        - targets: ['mysql-exporter:9104']
+  ```
+- 启动Prometheus，访问 http://localhost:9090
+
+#### 步骤三：部署Grafana可视化
+- 安装Grafana，配置Prometheus为数据源
+- 导入官方仪表盘模板（如Node Exporter Full、MySQL Overview等）
+- 自定义业务指标大盘
+
+#### 步骤四：部署Alertmanager告警
+- Prometheus配置告警规则（如CPU>80%、接口错误率>1%）
+  ```yaml
+  groups:
+    - name: instance-alerts
+      rules:
+        - alert: HighCPUUsage
+          expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: "高CPU告警"
+            description: "{{ $labels.instance }} CPU使用率高于80%"
+  ```
+- Alertmanager配置邮件、钉钉、微信、短信等告警通知
+
+#### 步骤五：日志监控（ELK/EFK）
+- **Filebeat/Fluentd**：采集应用/系统日志
+- **Logstash**：日志清洗、格式化、转发
+- **Elasticsearch**：日志存储与检索
+- **Kibana**：日志可视化与检索
+- 典型流程：
+  ```
+  [Filebeat/Fluentd] → [Logstash] → [Elasticsearch] → [Kibana]
+  ```
+- 配置日志关键字、异常、慢查询等自动告警
+
+---
+
+### 4. 云平台监控配置（以阿里云为例）
+- 云主机、RDS、Redis、SLB等云资源自动接入云监控
+- 控制台一键开启资源、应用、业务、日志、APM等监控
+- 配置自定义告警规则、自动伸缩、自动修复
+- 支持API/SDK自动化集成
+
+---
+
+### 5. 实践建议
+- 监控体系需覆盖基础资源、应用、数据库、中间件、日志、业务、安全等全链路
+- 关键指标建议多维度（实时+历史+趋势）监控，异常自动告警
+- 日志与指标联动，便于故障定位与追溯
+- 推荐开源+云平台结合，满足不同规模和场景需求
+
+---
+
+> 按上述步骤搭建和配置，可实现企业级后端监控体系，保障系统稳定与业务可观测。
+
+## 调用链路追踪（APM/Tracing）
+
+### 1. 原理与作用
+- 调用链路追踪（Distributed Tracing）用于记录一次请求在分布式系统中经过的所有服务、节点、方法、数据库等的调用路径、耗时、状态。
+- 解决微服务、异步、消息队列等复杂架构下"请求去哪了、慢在哪、错在哪"的问题。
+- 典型指标：TraceID、SpanID、服务名、方法名、耗时、状态码、异常、上下游依赖等。
+
+### 2. 监控内容
+- 全链路请求路径、每一跳的耗时与状态
+- 慢请求、异常请求定位
+- 服务依赖关系、拓扑图
+- 业务瓶颈、热点服务分析
+
+### 3. 主流开源与云平台方案
+- **开源APM/Tracing**：
+  - **Jaeger**（CNCF）：Uber开源，支持OpenTracing、Prometheus、K8s等
+  - **Zipkin**：Twitter开源，轻量易用，生态丰富
+  - **SkyWalking**：国产APM，支持多语言、服务/数据库/缓存/消息队列全链路
+  - **OpenTelemetry**：CNCF标准，统一Tracing/Metrics/Logs，支持多语言
+- **云平台APM**：
+  - 阿里云ARMS、腾讯云APM、华为云应用性能管理、AWS X-Ray、Azure Application Insights、Datadog APM、New Relic等
+
+### 4. Node.js与Java集成示例
+
+#### Node.js（以OpenTelemetry+Jaeger为例）
+```js
+// 安装依赖：npm install @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/exporter-jaeger
+const { NodeSDK } = require('@opentelemetry/sdk-node');
+const { JaegerExporter } = require('@opentelemetry/exporter-jaeger');
+const sdk = new NodeSDK({
+  traceExporter: new JaegerExporter({ endpoint: 'http://jaeger:14268/api/traces' })
+});
+sdk.start();
+// 业务代码自动注入TraceID/SpanID
+```
+
+#### Java（以Spring Boot + SkyWalking为例）
+- 引入SkyWalking Agent（无需改代码）
+  ```sh
+  java -javaagent:/opt/skywalking/agent/skywalking-agent.jar -Dskywalking.agent.service_name=order-service -jar app.jar
+  ```
+- Spring Cloud、Dubbo、gRPC等主流框架自动集成
+
+### 5. 最佳实践
+- 统一TraceID贯穿全链路（HTTP头、MQ消息、日志等）
+- 采样率合理配置，兼顾性能与可观测性
+- 结合日志、指标联动，快速定位问题
+- 关注慢请求、异常、依赖瓶颈，定期优化
+- 推荐开源APM与云平台APM结合，满足不同规模和合规需求
+
+---
+
+> 调用链路追踪是现代微服务、分布式系统可观测性的核心能力，强烈建议在生产环境全量接入。
+
+
+https://github.com/ccfos/nightingale
+

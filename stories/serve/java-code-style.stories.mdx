@@ -1,0 +1,60 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/java-代码风格增量检查" />
+
+## Java代码风格与增量检查实践
+
+### 1. 代码风格与静态检查工具
+- **Checkstyle**：检查Java代码风格，类似eslint。可集成到IDE、Maven/Gradle、CI。
+- **PMD**：检测潜在问题和坏味道。
+- **SpotBugs（FindBugs）**：静态分析，发现bug和潜在缺陷。
+- **SonarQube**：代码质量平台，支持静态检查、重复代码、复杂度、单元测试覆盖率等。
+
+### 2. 提交前钩子（类似husky）
+- **Husky + lint-staged**：Husky支持Java项目（只要用git），可在`.husky/pre-commit`脚本中调用`mvn checkstyle:check`、`./gradlew check`等命令。
+- **lefthook**：轻量级git hook工具，支持多语言，配置简单，适合团队协作。
+- **pre-commit**：跨语言git hook框架，支持Java、Python、JS等，易于集成各种检查脚本。
+
+### 3. 提交信息规范（类似commitlint）
+- **commitlint**：也可用于Java项目，只要你的提交走git，可以用Node.js方式安装并在husky/pre-commit或pre-push hook里校验。
+- **Conventional Commits**：约定式提交规范，配合commitlint、cz-customizable等工具，适用于所有git项目。
+
+### 4. 增量提交检查
+- **lint-staged**：可在提交时只检查变更的文件（如只对本次git staged的Java文件运行checkstyle）。
+- **SonarQube PR分析**：支持Pull Request增量代码质量检查。
+
+---
+
+### 5. Java项目集成Checkstyle + Husky + commitlint示例
+
+1. **安装husky**
+   ```sh
+   npm install husky --save-dev
+   npx husky install
+   ```
+2. **添加pre-commit钩子**
+   ```sh
+   npx husky add .husky/pre-commit "mvn checkstyle:check"
+   ```
+3. **集成commitlint**
+   ```sh
+   npm install @commitlint/{config-conventional,cli} --save-dev
+   npx husky add .husky/commit-msg "npx --no-install commitlint --edit $1"
+   ```
+4. **配置lint-staged（可选）**
+   ```json
+   // package.json
+   "lint-staged": {
+     "*.java": "mvn checkstyle:check"
+   }
+   ```
+
+---
+
+### 6. 总结与推荐
+- Java项目完全可以实现前端类似的代码风格检查、提交规范、增量检查和自动化流程。
+- 推荐结合Checkstyle/PMD/SonarQube + Husky/lefthook + commitlint，提升团队协作和代码质量。
+
+> 如需具体工具配置示例或脚本，欢迎告知你的构建工具（Maven/Gradle）和团队需求！

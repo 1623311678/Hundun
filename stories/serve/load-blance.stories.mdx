@@ -1,0 +1,121 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/负载均衡" />
+
+## 负载均衡详解与实践
+
+### 1. 负载均衡原理
+- 负载均衡（Load Balancing）用于将用户请求分发到多台后端服务器，实现高可用、高并发、弹性扩展。
+- 目标：提升系统吞吐、容错能力，消除单点故障。
+- 常见算法：轮询、加权轮询、最少连接、IP哈希、健康检查等。
+
+---
+
+### 2. 常见负载均衡方案
+- **L4（传输层）**：如LVS、云SLB，基于TCP/UDP，性能高，适合大流量
+- **L7（应用层）**：如Nginx、HAProxy、Traefik，支持HTTP/HTTPS、路由、重写、鉴权等
+- **云平台SLB**：如阿里云SLB、腾讯云CLB、AWS ELB，弹性伸缩、自动健康检查、全托管
+- **服务网格**：如Istio、Linkerd，微服务流量治理、灰度发布、熔断限流
+
+---
+
+### 3. Node.js/Java项目负载均衡部署实践
+
+#### 1）多实例部署
+- 将Node.js/Java服务打包为多个实例（进程/容器），监听不同端口或主机
+- 可用PM2（Node.js）、Spring Boot多端口、Docker Compose/K8s等编排
+
+#### 2）Nginx负载均衡（手动配置）
+- 安装Nginx，配置upstream
+  ```nginx
+  http {
+    upstream app_servers {
+      server 127.0.0.1:3000;
+      server 127.0.0.1:3001;
+      server 127.0.0.1:3002;
+    }
+    server {
+      listen 80;
+      location / {
+        proxy_pass http://app_servers;
+      }
+    }
+  }
+  ```
+- 适用于本地、物理机、虚拟机、Docker等多种环境
+
+#### 3）Docker Compose负载均衡
+- 多个服务实例+Nginx容器
+  ```yaml
+  version: '3'
+  services:
+    app1:
+      image: myapp:latest
+      ports: ["3000"]
+    app2:
+      image: myapp:latest
+      ports: ["3001"]
+    nginx:
+      image: nginx:latest
+      ports: ["80:80"]
+      volumes:
+        - ./nginx.conf:/etc/nginx/nginx.conf
+      depends_on:
+        - app1
+        - app2
+  ```
+
+#### 4）Kubernetes负载均衡
+- 使用Deployment+Service暴露多副本，Service自动负载均衡
+  ```yaml
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: myapp
+  spec:
+    replicas: 3
+    template:
+      spec:
+        containers:
+        - name: myapp
+          image: myapp:latest
+  ---
+  apiVersion: v1
+  kind: Service
+  metadata:
+    name: myapp-svc
+  spec:
+    type: LoadBalancer
+    selector:
+      app: myapp
+    ports:
+    - port: 80
+      targetPort: 3000
+  ```
+- 云厂商自动分配公网/内网SLB
+
+---
+
+### 4. 阿里云SLB负载均衡方案
+- **SLB（Server Load Balancer）**：阿里云托管型负载均衡，支持L4/L7、自动健康检查、弹性扩容、证书管理、DDoS防护
+- **配置流程**：
+  1. 云主机/容器服务部署多实例应用
+  2. 控制台创建SLB实例，添加后端服务器（ECS、容器、IP等）
+  3. 配置监听端口、转发规则、健康检查、证书等
+  4. 绑定域名/公网IP，流量自动分发到后端实例
+- **优点**：无需手动维护，自动弹性伸缩，支持多可用区容灾，监控与告警一体化
+
+---
+
+### 5. 负载均衡最佳实践与建议
+- 后端服务需无状态，支持横向扩展
+- 健康检查及时剔除故障节点
+- 配置合理的超时、重试、限流、熔断
+- 结合云平台SLB与Nginx/Traefik等自建方案，满足不同场景需求
+- 日志与监控联动，及时发现与定位流量异常
+
+---
+
+> 负载均衡是高可用、高并发系统的基石，推荐结合云平台SLB与开源方案，灵活应对不同规模和部署环境。

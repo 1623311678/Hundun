@@ -1,0 +1,193 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/ES" />
+
+## 什么是 ES？
+
+**ES（Elasticsearch）** 是一个开源的分布式搜索和分析引擎，基于 Apache Lucene 构建，具备高性能、可扩展、实时性强等特点。
+
+### ES 是干嘛的？
+- **全文检索**：支持大规模文本的高效搜索，常用于网站、应用的搜索功能。
+- **结构化数据分析**：支持复杂的聚合、统计、分析，适合日志、监控、报表等场景。
+- **分布式存储**：可横向扩展，支持PB级数据存储和检索。
+- **实时数据处理**：数据写入后几乎可立即被检索，适合实时业务需求。
+
+### 主要应用场景
+- 网站/应用搜索（如电商、社区、文档检索）
+- 日志分析（ELK Stack：Elasticsearch + Logstash + Kibana）
+- 监控告警（APM、指标聚合）
+- 数据可视化与报表
+- 大数据分析与数据湖
+
+### 基本原理
+- **倒排索引**：高效支持全文检索。
+- **分片与副本**：分布式存储，支持高可用和扩展。
+- **RESTful API**：通过HTTP接口进行数据的增删查改和查询分析。
+
+---
+
+> ES 是现代企业级系统中不可或缺的搜索与分析引擎，广泛应用于各类数据驱动场景。
+
+## Node.js 与 Java 如何接入 ES
+
+### Node.js 接入 Elasticsearch
+常用官方库：`@elastic/elasticsearch`
+```js
+// 安装依赖
+// npm install @elastic/elasticsearch
+const { Client } = require('@elastic/elasticsearch');
+const client = new Client({ node: 'http://localhost:9200' });
+
+// 索引文档
+await client.index({
+  index: 'products',
+  document: { id: 1, name: 'iPhone', desc: 'Apple phone' }
+});
+
+// 搜索文档
+const result = await client.search({
+  index: 'products',
+  query: { match: { name: 'iPhone' } }
+});
+console.log(result.hits.hits);
+```
+
+### Java 接入 Elasticsearch
+常用官方库：`elasticsearch-rest-high-level-client`（7.x），8.x推荐`elasticsearch-java`
+```java
+// 以7.x为例
+RestHighLevelClient client = new RestHighLevelClient(
+    RestClient.builder(new HttpHost("localhost", 9200, "http")));
+
+// 索引文档
+IndexRequest request = new IndexRequest("products").id("1")
+    .source("name", "iPhone", "desc", "Apple phone");
+client.index(request, RequestOptions.DEFAULT);
+
+// 搜索文档
+SearchRequest searchRequest = new SearchRequest("products");
+SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+sourceBuilder.query(QueryBuilders.matchQuery("name", "iPhone"));
+searchRequest.source(sourceBuilder);
+SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+response.getHits().forEach(hit -> System.out.println(hit.getSourceAsString()));
+```
+
+---
+
+## ES底层实现原理
+- **倒排索引**：ES基于Lucene，核心是倒排索引。将每个词映射到包含该词的文档ID列表，极大提升全文检索效率。
+- **分片与副本**：数据分布在多个分片（shard）上，支持横向扩展和高可用。
+- **内存+磁盘混合存储**：热数据常驻内存，冷数据落盘，查询时优先命中内存。
+- **批量写入与并发查询**：支持高并发写入和查询，适合大数据量场景。
+- **聚合与分析引擎**：内置聚合、分组、统计等分析能力。
+
+---
+
+## 为什么ES比MySQL索引还快？
+- **索引结构不同**：
+  - MySQL主用B+树索引，适合范围/主键查找，不适合全文检索。
+  - ES用倒排索引，专为全文检索和多条件查询优化。
+- **分布式架构**：ES天然分布式，查询可并发分发到多个分片，速度远超单机数据库。
+- **内存优化**：ES大量用内存缓存倒排索引，查询时极少磁盘IO。
+- **批量并行**：ES查询、聚合、排序等操作可并行处理，适合大数据量和复杂检索。
+- **专为搜索设计**：ES为搜索和分析场景专门优化，MySQL更适合事务型数据。
+
+---
+
+> 总结：ES底层倒排索引+分布式+内存优化，使其在全文检索和复杂查询场景下远快于传统关系型数据库索引。
+
+## MySQL B+树索引 vs. ES倒排索引
+
+### 区别与对比
+| 特性           | MySQL B+树索引           | ES倒排索引                  |
+|----------------|--------------------------|-----------------------------|
+| 适合场景       | 主键/范围查找、事务      | 全文检索、复杂多条件查询    |
+| 查询效率       | 主键/范围高，全文低      | 全文/多条件高               |
+| 数据结构       | B+树                     | 倒排索引                    |
+| 事务支持       | 强                       | 弱                          |
+| 分布式扩展     | 一般                     | 天然分布式                  |
+| 典型应用       | 业务库、交易库           | 搜索、日志、分析            |
+
+- **B+树索引**：适合结构化数据的高效主键/范围查找，不适合全文检索。
+- **倒排索引**：专为全文检索和复杂查询设计，速度远超关系型数据库在这类场景下的表现。
+
+---
+
+## ES倒排索引是如何做到的？
+
+1. **分词（Tokenization）**
+   - 文本字段写入ES时，先经过分词器（Analyzer）处理，将文本拆分为一个个词项（Token）。
+   - 例如："Elasticsearch is fast" → ["elasticsearch", "is", "fast"]
+
+2. **建立倒排表（Inverted Index）**
+   - 对每个词项，记录它出现在哪些文档（文档ID列表）。
+   - 例如：
+     - "elasticsearch" → [doc1, doc3]
+     - "fast" → [doc1, doc2]
+
+3. **存储结构**
+   - 每个倒排表条目还可记录词频、位置、偏移量等，支持高亮、相关性排序。
+   - 所有倒排表存储在Lucene的Segment文件中，支持高效合并和压缩。
+
+4. **查询过程**
+   - 查询时，直接查倒排表，瞬间定位包含某词的所有文档。
+   - 多条件查询时，取多个词的文档ID列表做交集/并集，效率极高。
+
+5. **分片与分布式**
+   - ES自动将索引分片，倒排表分布在多个节点，查询时并发检索，进一步提升速度。
+
+---
+
+> ES倒排索引通过分词、倒排表、分布式架构，实现了大规模文本的高效全文检索和复杂查询。
+
+## 什么是倒排表（倒排索引）？
+
+倒排表（Inverted Index）是全文检索系统的核心数据结构。
+
+### 概念
+- **正排表**：记录"文档 → 词"，即每个文档包含哪些词。
+- **倒排表**：记录"词 → 文档"，即每个词出现在哪些文档中。
+
+### 类比
+- 类似于图书馆的"图书主题卡片"：
+  - 每个主题（词）有一张卡片，卡片上列出所有包含该主题的书（文档ID）。
+
+### 示例
+假设有3个文档：
+- doc1: "Elasticsearch is fast"
+- doc2: "Elasticsearch is distributed"
+- doc3: "Fast search engine"
+
+分词后：
+- doc1: [elasticsearch, is, fast]
+- doc2: [elasticsearch, is, distributed]
+- doc3: [fast, search, engine]
+
+倒排表：
+| 词项           | 文档ID列表         |
+|----------------|-------------------|
+| elasticsearch  | doc1, doc2        |
+| is             | doc1, doc2        |
+| fast           | doc1, doc3        |
+| distributed    | doc2              |
+| search         | doc3              |
+| engine         | doc3              |
+
+### 查询过程
+- 查询"fast"时，直接查倒排表，得到doc1和doc3。
+- 查询"elasticsearch AND fast"，取两个词的文档ID列表交集，得到doc1。
+
+### 图示
+```
+词项:  elasticsearch   fast   search
+         |             |        |
+         v             v        v
+      [doc1,doc2]   [doc1,doc3] [doc3]
+```
+
+---
+
+> 倒排表让全文检索变得极快，因为查找某个词出现在哪些文档时只需查一张"卡片"，无需全表扫描。

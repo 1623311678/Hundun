@@ -1,0 +1,366 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+
+## RDS 与 Redis 详解
+
+### 一、RDS（关系型数据库服务）
+
+#### 1. 定义与用法
+- RDS（Relational Database Service）是云厂商提供的托管型关系型数据库服务，如阿里云RDS、腾讯云CDB、AWS RDS等。
+- 支持MySQL、PostgreSQL、SQL Server、MariaDB、Oracle等主流数据库。
+- 提供自动备份、主从高可用、弹性扩容、监控告警、自动运维等能力。
+- 用法与自建数据库一致，支持标准SQL协议，连接方式与本地数据库类似。
+
+#### 2. 企业生产用途场景
+- 业务数据存储（订单、用户、交易等核心表）
+- 金融、电商、SaaS、ERP等对数据一致性、事务性要求高的场景
+- 需要高可用、自动备份、弹性扩容的中大型系统
+- 多地域容灾、读写分离、分库分表等复杂部署需求
+
+#### 3. 常见问题与解决方案
+- **连接数瓶颈**：高并发下连接数耗尽
+  - 解决：合理配置连接池、使用ProxySQL等中间件、升级实例规格
+- **慢SQL/性能瓶颈**：大表、复杂查询导致慢SQL
+  - 解决：加索引、SQL优化、分库分表、冷热数据分离
+- **主从延迟/切换**：高并发写入或网络抖动导致主从延迟
+  - 解决：监控延迟、读写分离降级、自动主从切换
+- **备份恢复慢**：大数据量恢复耗时长
+  - 解决：分库分表、分区表、定期冷热归档
+- **安全合规**：数据泄露、误删
+  - 解决：开启SSL、权限最小化、定期备份、审计日志
+
+---
+
+### 二、Redis
+
+#### 1. 定义与用法
+- Redis 是开源高性能的内存键值数据库，支持丰富数据结构（String、Hash、List、Set、ZSet等）。
+- 典型用法：缓存、分布式锁、排行榜、消息队列、会话存储、热点数据存储等。
+- 云Redis（如阿里云Redis、腾讯云Redis、AWS Elasticache）提供高可用、持久化、自动运维等能力。
+- 用法：通过客户端库（如ioredis、redis-py、Jedis等）连接，支持多语言。
+
+#### 2. 企业生产用途场景
+- **缓存加速**：热点数据、接口结果、页面片段缓存，提升系统响应速度
+- **分布式锁**：控制分布式环境下的并发访问
+- **限流与计数**：API限流、秒杀、抢购等高并发场景
+- **消息队列**：简单队列、发布订阅、延迟队列
+- **会话存储**：用户Session、Token等临时数据
+- **排行榜/计分板**：游戏、电商等实时排名
+
+#### 3. 常见问题与解决方案
+- **缓存穿透**：请求大量不存在的数据，导致DB压力大
+  - 解决：缓存空值、布隆过滤器
+- **缓存雪崩**：大量缓存同一时间失效，DB被打爆
+  - 解决：设置过期时间随机化、热点数据预热、分批失效
+- **缓存击穿**：热点key失效瞬间大量请求打到DB
+  - 解决：互斥锁/单飞、预加载、永不过期+异步刷新
+- **主从延迟/数据丢失**：高并发写入或网络异常导致主从不一致
+  - 解决：开启AOF持久化、主从高可用、哨兵/集群自动切换
+- **内存溢出**：数据量超内存，Redis被杀死
+  - 解决：合理设置maxmemory、淘汰策略、冷热分层
+- **分布式锁失效**：锁未正确释放或被误删
+  - 解决：RedLock算法、唯一标识+过期时间
+
+---
+
+> RDS 适合核心业务数据存储，Redis 适合高性能缓存与高并发场景。两者常结合使用，需关注高可用、数据一致性与运维监控。
+
+## Node.js 与 Java 如何使用 RDS 与 Redis
+
+### 一、Node.js 使用示例
+
+#### 1. 连接 RDS（以MySQL为例，使用mysql2）
+```js
+// 安装依赖：npm install mysql2
+const mysql = require('mysql2/promise');
+const pool = mysql.createPool({
+  host: 'rds-host',
+  user: 'user',
+  password: 'pwd',
+  database: 'testdb',
+  waitForConnections: true,
+  connectionLimit: 10
+});
+// 查询
+const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [1]);
+```
+
+#### 2. 连接 Redis（使用ioredis）
+```js
+// 安装依赖：npm install ioredis
+const Redis = require('ioredis');
+const redis = new Redis({ host: 'redis-host', port: 6379, password: 'pwd' });
+// 设置与获取
+await redis.set('key', 'value', 'EX', 60);
+const value = await redis.get('key');
+```
+
+---
+
+### 二、Java 使用示例
+
+#### 1. 连接 RDS（以MySQL为例，Spring Boot + JPA）
+**application.yml**
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://rds-host:3306/testdb
+    username: user
+    password: pwd
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+```
+**Repository 示例**
+```java
+@Entity
+public class User {
+    @Id @GeneratedValue
+    private Long id;
+    private String username;
+}
+
+public interface UserRepository extends JpaRepository<User, Long> {}
+
+// 查询
+@Autowired
+private UserRepository userRepository;
+List<User> users = userRepository.findAll();
+```
+
+#### 2. 连接 Redis（Spring Boot + Lettuce）
+**application.yml**
+```yaml
+spring:
+  redis:
+    host: redis-host
+    port: 6379
+    password: pwd
+```
+**使用示例**
+```java
+@Autowired
+private StringRedisTemplate redisTemplate;
+// 设置
+redisTemplate.opsForValue().set("key", "value", Duration.ofSeconds(60));
+// 获取
+String value = redisTemplate.opsForValue().get("key");
+```
+
+---
+
+> Node.js 和 Java 都有丰富的数据库/缓存客户端库，连接云RDS与Redis与本地用法基本一致，建议结合连接池、超时、重试等配置提升健壮性。
+
+## RDS与Redis高级用法
+
+### 一、连接池优化
+
+#### 1. 原理与作用
+- 连接池用于复用数据库/缓存连接，减少频繁建立/销毁连接的开销，提升并发和性能。
+- 合理配置最大连接数、超时、空闲回收等参数，防止连接泄漏和资源耗尽。
+
+#### 2. Node.js 示例
+```js
+const pool = mysql.createPool({
+  host: 'rds-host',
+  user: 'user',
+  password: 'pwd',
+  database: 'testdb',
+  waitForConnections: true,
+  connectionLimit: 20, // 最大连接数
+  queueLimit: 0,
+  connectTimeout: 10000
+});
+```
+
+#### 3. Java 示例（Spring Boot + HikariCP）
+```yaml
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 30
+      minimum-idle: 5
+      idle-timeout: 30000
+      connection-timeout: 10000
+```
+
+---
+
+### 二、分布式锁
+
+#### 1. 原理与作用
+- 分布式锁用于多节点/多进程间互斥访问共享资源，防止并发冲突。
+- Redis常用setnx+expire实现，推荐RedLock算法提升可靠性。
+
+#### 2. Node.js 实现（ioredis）
+```js
+const Redis = require('ioredis');
+const redis = new Redis();
+async function acquireLock(key, value, ttl) {
+  return await redis.set(key, value, 'NX', 'PX', ttl); // 成功返回'OK'
+}
+async function releaseLock(key, value) {
+  const script = `if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end`;
+  return await redis.eval(script, 1, key, value);
+}
+```
+
+#### 3. Java 实现（Redisson）
+```java
+RLock lock = redissonClient.getLock("myLock");
+lock.lock(10, TimeUnit.SECONDS); // 加锁10秒
+try {
+    // 业务逻辑
+} finally {
+    lock.unlock();
+}
+```
+
+---
+
+### 三、事务
+
+#### 1. RDS事务
+- 关系型数据库支持ACID事务，保障多条SQL原子性。
+
+##### Node.js 示例（mysql2）
+```js
+const conn = await pool.getConnection();
+try {
+  await conn.beginTransaction();
+  await conn.query('UPDATE users SET ...');
+  await conn.query('INSERT INTO logs ...');
+  await conn.commit();
+} catch (e) {
+  await conn.rollback();
+  throw e;
+} finally {
+  conn.release();
+}
+```
+
+##### Java 示例（Spring事务）
+```java
+@Transactional
+public void updateUserAndLog() {
+    userRepository.save(...);
+    logRepository.save(...);
+}
+```
+
+#### 2. Redis事务
+- Redis支持MULTI/EXEC事务，适合简单原子操作，但不支持回滚。
+
+##### Node.js 示例
+```js
+const tx = redis.multi();
+tx.set('a', 1);
+tx.incr('a');
+const results = await tx.exec();
+```
+
+##### Java 示例（Spring Data Redis）
+```java
+List<Object> txResults = redisTemplate.execute(new SessionCallback<Object>() {
+    public Object execute(RedisOperations ops) {
+        ops.multi();
+        ops.opsForValue().set("a", "1");
+        ops.opsForValue().increment("a");
+        return ops.exec();
+    }
+});
+```
+
+---
+
+> 连接池优化提升并发与稳定性，分布式锁保障多节点互斥，事务机制保障数据一致性，是企业级系统不可或缺的高级能力。
+
+## 为什么有了MySQL还要用RDS？
+
+### 1. 运维自动化
+- **RDS**：云厂商负责数据库的安装、升级、备份、恢复、主从切换、监控、补丁、扩容等运维工作，用户只需关注业务。
+- **自建MySQL**：你需要自己搭建、维护、监控、备份、扩容、容灾等，运维成本高，易出错。
+
+### 2. 高可用与容灾
+- **RDS**：一键主从、自动故障切换、跨可用区容灾，极大提升可用性。
+- **自建MySQL**：主从、切换、容灾都需自己实现，且切换慢、易出错。
+
+### 3. 弹性扩容
+- **RDS**：支持在线升级实例规格、存储空间，按需付费，弹性伸缩。
+- **自建MySQL**：扩容需人工操作，甚至迁移数据，风险大、耗时长。
+
+### 4. 安全与合规
+- **RDS**：内置SSL加密、白名单、审计、自动备份、权限管理等安全能力。
+- **自建MySQL**：需自行配置安全策略，容易遗漏，合规难度大。
+
+### 5. 性能监控与优化
+- **RDS**：自带性能监控、慢SQL分析、告警、自动调优等工具。
+- **自建MySQL**：需自己搭建监控系统，分析和调优全靠人工。
+
+### 6. 备份与恢复
+- **RDS**：自动定期备份，支持一键恢复到任意时间点。
+- **自建MySQL**：备份、恢复需人工脚本，容易出错且耗时。
+
+### 7. 适合云原生/微服务架构
+- **RDS**：与云上其他服务（如ECS、Serverless、K8s等）无缝集成，支持API自动化管理。
+- **自建MySQL**：集成和自动化能力弱。
+
+---
+
+### 典型场景
+- **初创/中小团队**：无专职DBA，优先用RDS，省心省力。
+- **大规模/高可用/多地域**：RDS可轻松实现高可用、容灾、弹性扩展。
+- **合规要求高**：RDS自带安全、审计、备份等能力，满足合规需求。
+
+---
+
+### 总结
+- **RDS = 云厂商帮你运维的MySQL/PG/SQLServer/Oracle**，让你专注业务开发，极大降低运维和出错风险。
+- **自建MySQL适合有强DBA团队、特殊定制需求的场景**，但大多数企业推荐优先用RDS。
+
+## RDS与云主机自建MySQL在迁移、成本、性能等方面的实际案例与对比
+
+### 1. 迁移对比与案例
+- **自建MySQL迁移到RDS**：
+  - 常用工具：mysqldump、阿里云DTS、AWS DMS、Percona XtraBackup等。
+  - 迁移流程：
+    1. 业务低峰期全量导出数据（mysqldump/XtraBackup）。
+    2. 导入RDS实例，开启binlog增量同步。
+    3. 切换业务流量到RDS，确认无误后下线自建库。
+  - 案例：某互联网公司自建MySQL迁移到RDS，利用DTS实现不停服迁移，业务无感知，迁移后运维压力大幅降低。
+- **RDS迁移到自建MySQL**：
+  - 适用于特殊插件、极致定制需求。
+  - 需全量导出+增量同步，切换窗口需严格控制。
+
+### 2. 成本对比
+- **自建MySQL**：
+  - 需购买云主机、存储、带宽，自己搭建高可用、备份、监控等。
+  - 需专职DBA/运维，人工成本高。
+  - 隐性成本：故障、数据丢失、运维失误带来的损失。
+- **RDS**：
+  - 按需付费，实例规格、存储、流量等可弹性调整。
+  - 免去大量人力和风险成本。
+  - 价格略高于单台自建，但综合TCO（总拥有成本）更低。
+- **实际案例**：某SaaS公司迁移RDS后，DBA人力减少50%，故障率下降90%，综合成本下降30%。
+
+### 3. 性能对比
+- **自建MySQL**：
+  - 性能取决于云主机配置、存储IO、网络等，需手动调优。
+  - 高并发下易受限于单机资源，扩展性有限。
+- **RDS**：
+  - 云厂商提供高性能存储、网络优化、专用硬件，性能更稳定。
+  - 支持只读实例、分片、弹性扩容，适合高并发大数据量场景。
+- **实际案例**：某电商平台自建MySQL高峰期QPS 2万，迁移RDS后通过只读实例扩展到QPS 10万，性能瓶颈大幅缓解。
+
+### 4. 适用建议
+- **优先用RDS**：绝大多数企业、生产环境、对高可用/弹性/安全有要求的场景。
+- **自建MySQL**：仅适合极致定制、特殊插件、强DBA团队、成本极致敏感的场景。
+
+---
+
+> 迁移到RDS可大幅降低运维和风险，提升性能和可用性，是现代云原生架构的主流选择。
+
+<Meta title="Hundun/服务端/RDS与Redis" />

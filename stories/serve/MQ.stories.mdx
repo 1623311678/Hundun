@@ -1,0 +1,240 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/mq" />
+
+https://www.rabbitmq.com/
+
+## MQ（消息队列）详解
+
+### 1. MQ是什么？
+MQ（Message Queue，消息队列）是一种异步通信中间件，常用于服务解耦、流量削峰、异步处理、消息广播等场景。常见实现有RabbitMQ、Kafka、RocketMQ、ActiveMQ等。
+
+### 2. MQ的作用
+- **服务解耦**：生产者和消费者通过消息队列通信，无需直接依赖。
+- **异步处理**：耗时操作异步化，提高系统响应速度。
+- **削峰填谷**：应对高并发流量，缓冲突发请求。
+- **消息广播**：一条消息可被多个消费者消费。
+- **可靠传递**：支持消息持久化、重试、确认机制，保障消息不丢失。
+
+### 3. MQ的典型应用场景
+- 订单异步处理、支付通知、注册邮件/短信推送、日志收集、数据同步、事件驱动架构等。
+
+---
+
+## Node.js中使用RabbitMQ示例
+
+依赖：`amqplib`
+
+```js
+// 生产者 producer.js
+const amqp = require('amqplib');
+(async () => {
+  const conn = await amqp.connect('amqp://localhost');
+  const ch = await conn.createChannel();
+  const queue = 'test-queue';
+  await ch.assertQueue(queue);
+  ch.sendToQueue(queue, Buffer.from('Hello MQ!'));
+  console.log('消息已发送');
+  await ch.close();
+  await conn.close();
+})();
+```
+
+```js
+// 消费者 consumer.js
+const amqp = require('amqplib');
+(async () => {
+  const conn = await amqp.connect('amqp://localhost');
+  const ch = await conn.createChannel();
+  const queue = 'test-queue';
+  await ch.assertQueue(queue);
+  ch.consume(queue, msg => {
+    if (msg) {
+      console.log('收到消息:', msg.content.toString());
+      ch.ack(msg);
+    }
+  });
+})();
+```
+
+---
+
+## Java中使用RabbitMQ示例（Spring Boot）
+
+依赖：`spring-boot-starter-amqp`
+
+**application.yml**
+```yaml
+spring:
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+```
+
+**生产者 Producer**
+```java
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class Producer {
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    public void send() {
+        rabbitTemplate.convertAndSend("test-queue", "Hello MQ!");
+    }
+}
+```
+
+**消费者 Consumer**
+```java
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Component;
+
+@Component
+public class Consumer {
+    @RabbitListener(queues = "test-queue")
+    public void receive(String message) {
+        System.out.println("收到消息: " + message);
+    }
+}
+```
+
+---
+
+更多参考：[RabbitMQ官网](https://www.rabbitmq.com/)
+
+## MQ常见问题与解决方案
+
+### 1. MQ常见问题
+- **消息丢失**：消息未被正确持久化或消费，导致数据丢失。
+- **消息重复**：网络抖动、消费端重试等导致同一消息被多次消费。
+- **消息积压**：消费端处理能力不足，消息堆积在队列中。
+- **顺序性问题**：分区、并发消费导致消息顺序错乱。
+- **消息延迟**：网络、磁盘IO、消费端阻塞等导致消息处理延迟。
+
+### 2. 丢消息的原因与解决办法
+- **生产者未持久化消息**：
+  - 解决：发送消息时设置持久化（如RabbitMQ的`deliveryMode=2`）。
+- **Broker未持久化消息**：
+  - 解决：开启队列和消息的持久化配置。
+- **消费者未确认消息**：
+  - 解决：使用手动ack，消费成功后再确认。
+- **网络异常/宕机**：
+  - 解决：开启高可用集群、主从备份、消息重试机制。
+- **消息超时丢弃**：
+  - 解决：合理设置消息过期时间，监控消费进度。
+
+#### 代码示例：RabbitMQ消息持久化
+```js
+// Node.js生产者
+ch.assertQueue(queue, { durable: true });
+ch.sendToQueue(queue, Buffer.from('msg'), { persistent: true });
+```
+```java
+// Java生产者
+rabbitTemplate.convertAndSend("queue", (MessagePostProcessor) message -> {
+    message.getMessageProperties().setDeliveryMode(MessageDeliveryMode.PERSISTENT);
+    return message;
+});
+```
+
+### 3. 如何保障消息可靠性？（详细方案）
+
+#### 1. 消息持久化
+- **生产者端**：发送消息时设置持久化参数（如RabbitMQ的persistent、Kafka的acks=all、RocketMQ的SYNC_FLUSH）。
+- **Broker端**：队列/主题开启持久化，消息写入磁盘，防止Broker宕机丢失。
+- **代码示例**：
+  - RabbitMQ（Node.js）：
+    ```js
+    ch.assertQueue(queue, { durable: true });
+    ch.sendToQueue(queue, Buffer.from('msg'), { persistent: true });
+    ```
+  - Kafka（Node.js）：
+    ```js
+    producer.send({ topic, messages, acks: -1 }); // acks=-1/all
+    ```
+  - RocketMQ（Java）：
+    ```java
+    Message msg = new Message(...);
+    SendResult result = producer.send(msg, 3000); // 默认同步持久化
+    ```
+
+#### 2. 消费端ack与重试
+- **手动ack**：消费端处理成功后手动ack，失败不ack，消息会重投。
+- **自动重试**：消费失败时，MQ自动/手动重试，避免消息丢失。
+- **死信队列（DLQ）**：多次重试仍失败的消息进入死信队列，便于后续人工/自动补偿。
+- **代码示例**：
+  - RabbitMQ（Node.js）：
+    ```js
+    ch.consume(queue, msg => {
+      try {
+        // 业务处理
+        ch.ack(msg);
+      } catch (e) {
+        ch.nack(msg, false, true); // 失败重投
+      }
+    });
+    ```
+  - Kafka：消费端自动commit或手动commit offset，失败可seek回重试。
+  - RocketMQ：消费端返回ConsumeConcurrentlyStatus.RECONSUME_LATER实现重试。
+
+#### 3. 幂等消费
+- 消费端需保证幂等性（如唯一ID去重、状态校验），避免消息重复消费导致数据异常。
+- 方案：业务表加唯一索引、Redis去重、分布式锁等。
+
+#### 4. 自动检测与监控
+- **消息堆积监控**：监控队列/主题的消息堆积量，及时发现消费异常。
+- **消费延迟监控**：监控消息从生产到消费的延迟，发现处理瓶颈。
+- **告警系统**：如Prometheus+Alertmanager、RabbitMQ/Kafka自带管理界面、RocketMQ Console。
+- **自动补偿**：定时扫描死信队列/异常消息，自动重试或人工介入。
+- **代码/工具示例**：
+  - RabbitMQ管理API、Prometheus exporter、Kafka JMX exporter、RocketMQ Console等。
+
+#### 5. 事务消息与最终一致性
+- RocketMQ/Kafka等支持事务消息，确保消息与业务操作一致。
+- 关键场景可用本地消息表、事务消息、补偿机制等保障最终一致性。
+
+---
+
+> 可靠性保障需生产端、Broker、消费端、监控告警多层协同，自动检测与补偿机制是高可用消息系统的关键。
+
+### 4. MQ与postMessage的区别
+- **postMessage**：浏览器端用于iframe、window间通信，属于前端进程内/跨窗口消息机制。
+- **MQ**：服务端分布式消息中间件，支持跨服务、跨进程、异步、持久化、可靠传递。
+- **应用场景不同**：postMessage适合前端页面通信，MQ适合后端服务解耦、异步、削峰等。
+
+## 主流MQ对比：应用场景与区别
+
+| MQ类型      | 典型应用场景                   | 优势特点                         | 不足/限制                   |
+|-------------|-------------------------------|----------------------------------|-----------------------------|
+| **RabbitMQ**| 业务解耦、异步处理、订单、通知 | 支持多协议、易用、社区活跃、可靠 | 吞吐量一般，适合中小型场景   |
+| **Kafka**   | 日志收集、流式计算、数据管道   | 高吞吐、分区、可扩展、持久化强   | 实时性一般，消息顺序弱       |
+| **RocketMQ**| 金融、电商、事务消息、延迟队列 | 高吞吐、事务消息、延迟消息强     | 社区生态不如Kafka/RabbitMQ   |
+| **ActiveMQ**| 传统企业集成、老系统           | 支持JMS、协议多、易集成          | 性能一般，社区活跃度下降     |
+
+### 1. RabbitMQ
+- 适合：订单、注册、通知、异步任务等业务解耦、可靠性要求高但吞吐量中等的场景。
+- 特点：协议丰富（AMQP、MQTT等）、易用、管理界面友好、消息可靠性高。
+
+### 2. Kafka
+- 适合：大数据、日志收集、流式处理、数据总线、监控等高吞吐、可扩展场景。
+- 特点：分区、顺序性、持久化、横向扩展能力强，适合大规模数据流。
+
+### 3. RocketMQ
+- 适合：金融、电商、事务消息、延迟消息、海量消息处理。
+- 特点：事务消息、延迟队列、顺序消息、吞吐高，阿里开源，云原生支持好。
+
+### 4. ActiveMQ
+- 适合：传统企业应用、JMS集成、遗留系统对接。
+- 特点：JMS支持好、协议多、易集成，适合老系统。
+
+---
+
+> 选择MQ时需结合业务场景、性能需求、生态兼容性、团队技术栈等综合考量。

@@ -1,0 +1,418 @@
+
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/java-SpringBoot实践" />
+
+## Java SpringBoot订单微服务系统架构设计
+
+本示例以订单微服务为核心，采用Spring Boot + MyBatis + MySQL + Kafka + Elasticsearch + MQ等技术栈，结合微服务架构进行设计。
+
+### 1. 架构总览
+
+- **微服务拆分**：
+  - 订单服务（Order Service）
+  - 用户服务（User Service）
+  - 商品服务（Product Service）
+  - 支付服务（Payment Service）
+  - 通知服务（Notification Service）
+- **服务间通信**：RESTful API + 消息队列（MQ/Kafka）
+- **注册与发现**：Nacos/Consul/Eureka
+- **配置中心**：Nacos/Spring Cloud Config
+- **网关**：Spring Cloud Gateway/Nginx
+
+### 2. 技术选型
+
+- **后端框架**：Spring Boot、Spring Cloud
+- **ORM**：MyBatis（数据访问层）
+- **数据库**：MySQL（主数据存储）
+- **消息中间件**：Kafka（异步解耦、事件驱动）、RocketMQ/RabbitMQ（可选）
+- **搜索引擎**：Elasticsearch（订单检索、分析）
+- **缓存**：Redis（热点数据缓存、分布式锁）
+- **API文档**：Swagger/OpenAPI
+- **监控**：Spring Boot Actuator、Prometheus、Grafana、ELK
+
+### 3. 典型业务流程
+
+1. 用户下单：
+   - 前端调用订单服务API，订单服务校验用户、商品、库存等信息。
+   - 订单数据写入MySQL，订单事件发送到Kafka。
+2. 库存扣减：
+   - 商品服务监听Kafka订单事件，扣减库存。
+3. 支付处理：
+   - 用户支付后，支付服务回调订单服务，更新订单状态。
+4. 订单检索：
+   - 订单服务将订单数据同步到Elasticsearch，支持复杂检索。
+5. 通知推送：
+   - 通知服务通过MQ异步推送短信/邮件/站内信。
+
+### 4. 关键设计要点
+
+- **服务解耦**：通过MQ/Kafka实现服务间异步通信，降低耦合。
+- **数据一致性**：采用本地消息表、事务消息、幂等处理等手段保障一致性。
+- **高可用**：服务多实例部署，数据库主从，MQ集群，ES集群。
+- **扩展性**：各服务可独立扩容，支持水平扩展。
+- **监控与追踪**：全链路追踪（如SkyWalking/Zipkin）、日志采集、指标监控。
+
+### 5. 目录结构建议
+
+```plaintext
+order-service/
+├── src/main/java/com/example/order
+│   ├── controller
+│   ├── service
+│   ├── repository
+│   ├── model
+│   ├── mq
+│   └── config
+├── src/main/resources
+│   ├── application.yml
+│   └── mapper
+└── Dockerfile
+```
+
+### 6. 详细目录结构与核心代码示例
+
+```plaintext
+order-service/
+├── src/main/java/com/example/order
+│   ├── controller
+│   │   └── OrderController.java
+│   ├── service
+│   │   └── OrderService.java
+│   ├── service/impl
+│   │   └── OrderServiceImpl.java
+│   ├── repository
+│   │   └── OrderRepository.java
+│   ├── model
+│   │   └── Order.java
+│   ├── mq
+│   │   └── OrderEventProducer.java
+│   └── config
+│       └── KafkaConfig.java
+├── src/main/resources
+│   ├── application.yml
+│   └── mapper
+│       └── OrderMapper.xml
+└── Dockerfile
+```
+
+#### Order.java
+```java
+package com.example.order.model;
+
+public class Order {
+    private Long id;
+    private Long userId;
+    private Long productId;
+    private Integer amount;
+    private String status;
+    // getter/setter 省略
+}
+```
+
+#### OrderController.java
+```java
+package com.example.order.controller;
+
+import com.example.order.model.Order;
+import com.example.order.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+    @Autowired
+    private OrderService orderService;
+
+    @GetMapping("/{id}")
+    public Order getOrder(@PathVariable Long id) {
+        return orderService.getOrderById(id);
+    }
+
+    @PostMapping("")
+    public Order createOrder(@RequestBody Order order) {
+        return orderService.createOrder(order);
+    }
+
+    @PostMapping("/{id}/process")
+    public Order processOrder(@PathVariable Long id) {
+        return orderService.processOrder(id);
+    }
+
+    @GetMapping("")
+    public List<Order> listOrders() {
+        return orderService.listOrders();
+    }
+}
+```
+
+#### OrderService.java
+```java
+package com.example.order.service;
+
+import com.example.order.model.Order;
+import java.util.List;
+
+public interface OrderService {
+    Order getOrderById(Long id);
+    Order createOrder(Order order);
+    Order processOrder(Long id);
+    List<Order> listOrders();
+}
+```
+
+#### OrderServiceImpl.java
+```java
+package com.example.order.service.impl;
+
+import com.example.order.model.Order;
+import com.example.order.repository.OrderRepository;
+import com.example.order.mq.OrderEventProducer;
+import com.example.order.service.OrderService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import java.util.List;
+
+@Service
+public class OrderServiceImpl implements OrderService {
+    @Autowired
+    private OrderRepository orderRepository;
+    @Autowired
+    private OrderEventProducer orderEventProducer;
+
+    @Override
+    public Order getOrderById(Long id) {
+        return orderRepository.findById(id);
+    }
+
+    @Override
+    public Order createOrder(Order order) {
+        order.setStatus("CREATED");
+        orderRepository.save(order);
+        orderEventProducer.sendOrderCreatedEvent(order);
+        return order;
+    }
+
+    @Override
+    public Order processOrder(Long id) {
+        Order order = orderRepository.findById(id);
+        if (order != null && "CREATED".equals(order.getStatus())) {
+            order.setStatus("PROCESSED");
+            orderRepository.update(order);
+            orderEventProducer.sendOrderProcessedEvent(order);
+        }
+        return order;
+    }
+
+    @Override
+    public List<Order> listOrders() {
+        return orderRepository.findAll();
+    }
+}
+```
+
+#### OrderRepository.java
+```java
+package com.example.order.repository;
+
+import com.example.order.model.Order;
+import java.util.List;
+
+public interface OrderRepository {
+    Order findById(Long id);
+    void save(Order order);
+    void update(Order order);
+    List<Order> findAll();
+}
+```
+
+#### OrderEventProducer.java
+```java
+package com.example.order.mq;
+
+import com.example.order.model.Order;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.stereotype.Component;
+
+@Component
+public class OrderEventProducer {
+    @Autowired
+    private KafkaTemplate<String, Object> kafkaTemplate;
+
+    public void sendOrderCreatedEvent(Order order) {
+        kafkaTemplate.send("order-created", order);
+    }
+    public void sendOrderProcessedEvent(Order order) {
+        kafkaTemplate.send("order-processed", order);
+    }
+}
+```
+
+#### application.yml（片段）
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/orderdb
+    username: root
+    password: password
+  kafka:
+    bootstrap-servers: localhost:9092
+```
+
+### 7. 用户服务（User Service）与微服务协作示例
+
+#### 目录结构
+```plaintext
+user-service/
+├── src/main/java/com/example/user
+│   ├── controller
+│   │   └── UserController.java
+│   ├── service
+│   │   └── UserService.java
+│   ├── service/impl
+│   │   └── UserServiceImpl.java
+│   ├── repository
+│   │   └── UserRepository.java
+│   ├── model
+│   │   └── User.java
+│   └── config
+│       └── ...
+├── src/main/resources
+│   ├── application.yml
+│   └── mapper
+│       └── UserMapper.xml
+└── Dockerfile
+```
+
+#### User.java
+```java
+package com.example.user.model;
+
+public class User {
+    private Long id;
+    private String username;
+    private String email;
+    // getter/setter 省略
+}
+```
+
+#### UserController.java
+```java
+package com.example.user.controller;
+
+import com.example.user.model.User;
+import com.example.user.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/users")
+public class UserController {
+    @Autowired
+    private UserService userService;
+
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable Long id) {
+        return userService.getUserById(id);
+    }
+}
+```
+
+#### UserService.java
+```java
+package com.example.user.service;
+
+import com.example.user.model.User;
+
+public interface UserService {
+    User getUserById(Long id);
+}
+```
+
+#### UserServiceImpl.java
+```java
+package com.example.user.service.impl;
+
+import com.example.user.model.User;
+import com.example.user.repository.UserRepository;
+import com.example.user.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class UserServiceImpl implements UserService {
+    @Autowired
+    private UserRepository userRepository;
+
+    @Override
+    public User getUserById(Long id) {
+        return userRepository.findById(id);
+    }
+}
+```
+
+#### UserRepository.java
+```java
+package com.example.user.repository;
+
+import com.example.user.model.User;
+
+public interface UserRepository {
+    User findById(Long id);
+}
+```
+
+#### 用户服务与订单服务的协作
+
+在订单服务中通过RestTemplate/OpenFeign等方式远程调用用户服务接口，实现微服务间协作：
+
+##### 订单服务中调用用户服务
+```java
+// OrderServiceImpl.java 片段
+import org.springframework.web.client.RestTemplate;
+// ...
+@Autowired
+private RestTemplate restTemplate;
+
+@Override
+public Order createOrder(Order order) {
+    // 校验用户是否存在
+    User user = restTemplate.getForObject("http://user-service/users/" + order.getUserId(), User.class);
+    if (user == null) {
+        throw new RuntimeException("用户不存在");
+    }
+    // ...后续订单创建逻辑
+}
+```
+
+> 生产环境推荐使用OpenFeign等声明式HTTP客户端，支持服务注册与发现、负载均衡。
+
+#### Spring Cloud注册与发现配置（简要）
+```yaml
+# application.yml 片段
+spring:
+  application:
+    name: order-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+
+---
+spring:
+  application:
+    name: user-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+```
+
+---
+
+通过上述方式，订单服务与用户服务实现了解耦、独立部署、服务注册与发现、远程调用等微服务核心特性。

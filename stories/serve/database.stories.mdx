@@ -1,0 +1,222 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/数据库选择" />
+
+## 现代服务端数据库选择、ORM与管理后台
+
+### 1. 数据库选择原则
+- **关系型数据库（RDBMS）**：如MySQL、PostgreSQL、SQL Server、Oracle
+  - 适合强一致性、事务型、结构化数据场景
+- **NoSQL数据库**：如MongoDB、Redis、Elasticsearch、Cassandra
+  - 适合高并发、海量数据、灵活结构、缓存、全文检索等场景
+- **分布式/云数据库**：如TiDB、PolarDB、Aurora、Cloud SQL
+  - 适合弹性扩展、高可用、云原生场景
+
+### 2. ORM（对象关系映射）
+- 简化数据库操作，将表结构映射为对象，提升开发效率，减少SQL手写
+- 常见ORM：
+  - **Node.js**：Sequelize、TypeORM、Prisma、Mongoose（MongoDB）
+  - **Java**：MyBatis、JPA（Hibernate）、Spring Data JPA
+
+### 3. 数据库管理后台
+- **开源/自建**：phpMyAdmin、Adminer、DBeaver、Navicat、pgAdmin、Mongo Express、RedisInsight
+- **云平台**：阿里云RDS控制台、腾讯云数据库控制台、AWS RDS Console
+- **自研/集成**：可通过ORM/框架集成后台管理（如Spring Boot Admin、NestJS Admin等）
+
+---
+
+## Node.js 应用数据库选型与示例
+
+### 1. 选型建议
+- 业务数据：MySQL/PostgreSQL + Sequelize/TypeORM/Prisma
+- 文档/灵活结构：MongoDB + Mongoose
+- 缓存/高并发：Redis
+
+### 2. ORM 示例（以Sequelize+MySQL为例）
+```js
+// 安装依赖：npm install sequelize mysql2
+const { Sequelize, DataTypes } = require('sequelize');
+const sequelize = new Sequelize('testdb', 'root', 'password', {
+  host: 'localhost', dialect: 'mysql'
+});
+const User = sequelize.define('User', {
+  username: DataTypes.STRING,
+  email: DataTypes.STRING
+});
+// 新增用户
+await User.create({ username: 'alice', email: 'alice@test.com' });
+// 查询用户
+const users = await User.findAll();
+```
+
+### 3. 数据库管理后台
+- 推荐 DBeaver、phpMyAdmin、Navicat、Mongo Express（MongoDB）等
+
+---
+
+## Java 应用数据库选型与示例
+
+### 1. 选型建议
+- 业务数据：MySQL/PostgreSQL + MyBatis/JPA/Spring Data JPA
+- 文档/灵活结构：MongoDB + Spring Data MongoDB
+- 缓存/高并发：Redis + Spring Data Redis
+
+### 2. ORM 示例（以Spring Data JPA+MySQL为例）
+```java
+// User.java
+@Entity
+public class User {
+    @Id @GeneratedValue
+    private Long id;
+    private String username;
+    private String email;
+    // getter/setter
+}
+
+// UserRepository.java
+public interface UserRepository extends JpaRepository<User, Long> {
+    List<User> findByUsername(String username);
+}
+
+// 使用示例
+@Autowired
+private UserRepository userRepository;
+userRepository.save(new User("alice", "alice@test.com"));
+List<User> users = userRepository.findByUsername("alice");
+```
+
+### 3. 数据库管理后台
+- 推荐 DBeaver、Navicat、Adminer、Spring Boot Admin（监控）、pgAdmin、RedisInsight 等
+
+---
+
+## 进阶：分库分表、读写分离与数据库中间件
+
+### 1. 分库分表
+- **分库**：将数据按某种规则分散到多个数据库实例，提升容量和并发能力。
+- **分表**：将单表数据按规则拆分为多张表，解决单表数据量过大导致的性能瓶颈。
+- **常用策略**：按用户ID、时间、地理等分片键分库分表。
+- **挑战**：跨库/跨表查询、事务一致性、分布式ID生成。
+
+#### 常用中间件/方案
+- **Java**：ShardingSphere、MyCAT、TDDL（阿里）、Cobar
+- **Node.js**：Sequelize/TypeORM自定义分表逻辑，或通过数据库Proxy（如Atlas、Cetus）
+
+#### Java ShardingSphere 示例
+```yaml
+# application.yml
+spring:
+  shardingsphere:
+    datasource:
+      names: ds0,ds1
+      ds0:
+        url: jdbc:mysql://localhost:3306/db0
+        username: root
+        password: pwd
+      ds1:
+        url: jdbc:mysql://localhost:3306/db1
+        username: root
+        password: pwd
+    sharding:
+      tables:
+        user:
+          actual-data-nodes: ds$->{0..1}.user_$->{0..1}
+          table-strategy:
+            inline:
+              sharding-column: id
+              algorithm-expression: user_$->{id % 2}
+```
+
+#### Node.js 分表逻辑示例
+```js
+// 伪代码，按userId分表
+function getUserTable(userId) {
+  return userId % 2 === 0 ? 'user_0' : 'user_1';
+}
+const table = getUserTable(userId);
+const sql = `SELECT * FROM ${table} WHERE id = ?`;
+```
+
+---
+
+### 2. 读写分离
+- **原理**：主库负责写操作，从库负责读操作，提升读性能和可用性。
+- **同步方式**：主从复制（MySQL Replication、PostgreSQL Streaming Replication等）。
+- **挑战**：读写延迟、数据一致性、负载均衡。
+
+#### 常用中间件/方案
+- **Java**：ShardingSphere、MyCAT、Spring Data多数据源
+- **Node.js**：Sequelize/TypeORM多数据源配置，或通过Proxy
+
+#### Java Spring Data多数据源配置
+```yaml
+spring:
+  datasource:
+    master:
+      url: jdbc:mysql://localhost:3306/master
+    slave:
+      url: jdbc:mysql://localhost:3306/slave
+```
+
+#### Node.js Sequelize读写分离
+```js
+const sequelize = new Sequelize('db', 'user', 'pwd', {
+  replication: {
+    read: [{ host: 'slave1' }, { host: 'slave2' }],
+    write: { host: 'master' }
+  }
+});
+```
+
+---
+
+### 3. 数据库中间件
+- **作用**：屏蔽分库分表、读写分离、路由、分布式事务等复杂性，提供统一访问入口。
+- **主流产品**：ShardingSphere、MyCAT、Cetus、Atlas、TDDL、Cobar
+- **云原生**：阿里云DRDS、腾讯云TDSQL、AWS Aurora等
+
+---
+
+### 4. ORM配置细节
+- **连接池**：合理配置最大连接数、超时、重试等参数，提升并发和稳定性。
+- **懒加载/预加载**：根据业务场景选择，避免N+1查询。
+- **事务管理**：确保多表/多库操作的一致性，Java常用@Transactional，Node.js用事务API。
+- **索引与性能**：为高频查询字段建索引，避免全表扫描。
+- **日志与监控**：开启SQL日志，集成APM/监控工具。
+
+#### Java ORM配置片段（Spring Boot + JPA）
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/db
+    username: root
+    password: pwd
+    hikari:
+      maximum-pool-size: 20
+      connection-timeout: 30000
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+```
+
+#### Node.js ORM配置片段（Sequelize）
+```js
+const sequelize = new Sequelize('db', 'user', 'pwd', {
+  pool: {
+    max: 20,
+    min: 2,
+    acquire: 30000,
+    idle: 10000
+  },
+  logging: console.log
+});
+```
+
+---
+
+> 分库分表、读写分离和数据库中间件是现代高并发系统的核心能力，ORM配置优化可显著提升开发效率和系统性能。
+
+> 现代服务端数据库选型需结合业务场景、数据结构、扩展性、团队技术栈等综合考量。ORM和管理后台可大幅提升开发与运维效率。

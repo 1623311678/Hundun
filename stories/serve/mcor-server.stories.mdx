@@ -1,0 +1,183 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/微服务架构" />
+
+## 什么是微服务架构？
+
+微服务架构（Microservices Architecture）是一种将单一应用拆分为一组小型、自治、可独立部署的服务的架构风格。每个服务围绕特定业务能力构建，服务间通过网络通信（如HTTP、RPC、消息队列）协作。
+
+### 微服务架构的核心特点
+- 单一职责：每个服务聚焦单一业务能力
+- 独立部署：服务可独立开发、测试、部署、扩展
+- 技术多样性：不同服务可用不同技术栈实现
+- 去中心化：自治团队负责各自服务的全生命周期
+- 容错与弹性：服务间隔离，单点故障影响有限
+
+---
+
+## Java 微服务架构设计与示例
+
+### 设计思路
+- 常用Spring Boot + Spring Cloud生态
+- 服务注册与发现：Eureka/Nacos/Consul
+- 配置中心：Spring Cloud Config/Nacos
+- 服务网关：Spring Cloud Gateway
+- 通信方式：RESTful、gRPC、消息队列
+- 监控：Spring Boot Actuator、Prometheus、ELK
+
+### 目录结构示例
+```plaintext
+order-service/
+├── src/main/java/com/example/order
+│   ├── controller
+│   ├── service
+│   ├── repository
+│   └── model
+user-service/
+├── src/main/java/com/example/user
+│   ├── controller
+│   ├── service
+│   ├── repository
+│   └── model
+```
+
+### 典型代码示例（Spring Boot REST服务）
+```java
+// OrderController.java
+@RestController
+@RequestMapping("/orders")
+public class OrderController {
+    @GetMapping("/{id}")
+    public Order getOrder(@PathVariable Long id) {
+        // ... 查询订单逻辑
+    }
+}
+```
+
+```java
+// 服务间调用（RestTemplate 或 OpenFeign）
+@FeignClient(name = "user-service")
+public interface UserClient {
+    @GetMapping("/users/{id}")
+    User getUser(@PathVariable Long id);
+}
+```
+
+---
+
+## Node.js 微服务架构设计与示例
+
+### 设计思路
+- 常用Express/Koa + 微服务框架（如Moleculer、Seneca、Micro）
+- 服务注册与发现：Consul、etcd、自实现
+- 通信方式：HTTP、gRPC、消息队列（如RabbitMQ、Kafka）
+- API网关：API Gateway/Nginx
+- 监控：Prometheus、ELK、PM2
+
+### 目录结构示例
+```plaintext
+order-service/
+├── src/
+│   └── order.controller.js
+user-service/
+├── src/
+│   └── user.controller.js
+```
+
+### 典型代码示例（Express + HTTP）
+```js
+// order.controller.js
+const express = require('express');
+const router = express.Router();
+router.get('/orders/:id', (req, res) => {
+  // ... 查询订单逻辑
+  res.json({ id: req.params.id, status: 'ok' });
+});
+module.exports = router;
+```
+
+```js
+// 服务间调用（HTTP）
+const axios = require('axios');
+async function getUser(id) {
+  const res = await axios.get(`http://user-service:3000/users/${id}`);
+  return res.data;
+}
+```
+
+---
+
+## 微服务中的服务注册与发现
+
+服务注册与发现是微服务架构的核心能力之一，解决服务实例动态上下线、自动发现、负载均衡等问题。
+
+### 原理说明
+- **服务注册中心**：所有服务启动时将自身信息（服务名、地址、端口等）注册到注册中心。
+- **服务发现**：服务消费者通过注册中心获取目标服务的可用实例列表，实现自动发现和负载均衡。
+- **动态感知**：服务实例上下线、健康状态变化，注册中心会自动通知消费者。
+
+### 常用注册中心
+- **Eureka**（Spring Cloud Netflix）：Java生态，易用、社区成熟。
+- **Nacos**（阿里开源）：支持服务注册/发现+配置中心，支持多语言。
+- **Consul**：支持健康检查、KV存储、跨语言，适合多技术栈。
+- **etcd、Zookeeper**：分布式一致性强，常用于底层协调。
+
+---
+
+### Java微服务注册与发现示例（以Nacos为例）
+
+**1. 服务端注册**
+```yaml
+# application.yml
+spring:
+  application:
+    name: order-service
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+```
+服务启动后自动注册到Nacos。
+
+**2. 服务发现与调用**
+```java
+@FeignClient(name = "user-service")
+public interface UserClient {
+    @GetMapping("/users/{id}")
+    User getUser(@PathVariable Long id);
+}
+```
+Feign会自动从Nacos获取user-service的可用实例并负载均衡调用。
+
+---
+
+### Node.js微服务注册与发现示例（以Consul为例）
+
+**1. 服务注册**
+```js
+// 使用consul包
+const Consul = require('consul');
+const consul = new Consul();
+consul.agent.service.register({
+  name: 'order-service',
+  address: '127.0.0.1',
+  port: 3000
+}, err => {
+  if (err) throw err;
+  console.log('Service registered to Consul');
+});
+```
+
+**2. 服务发现**
+```js
+consul.catalog.service.nodes('user-service', (err, result) => {
+  if (err) throw err;
+  console.log('user-service nodes:', result);
+});
+```
+
+---
+
+> 服务注册与发现让微服务系统具备自动化、弹性扩展和高可用能力，是现代分布式架构的基础设施。

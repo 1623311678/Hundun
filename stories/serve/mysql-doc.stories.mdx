@@ -1,0 +1,220 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/mysql高可用" />
+
+## Node.js下MySQL微服务架构设计详解
+
+### 1. 架构总览
+- 每个微服务独立数据库（Database per Service），服务间通过API/MQ通信，避免直接跨库操作。
+- 采用主从（主备）架构，主库负责写，从库负责读，提升读性能和高可用。
+- 支持分库分表、读写分离、分布式事务等。
+
+### 2. 主从数据库设计
+- **主库（Master）**：负责所有写操作（INSERT/UPDATE/DELETE）。
+- **从库（Slave/Replica）**：负责读操作（SELECT），通过主从复制机制同步主库数据。
+- **读写分离**：应用层或中间件根据SQL类型路由到主库或从库。
+- **高可用**：主库故障时可自动切换到从库（如MHA、Orchestrator、ProxySQL等）。
+
+#### 架构示意图
+```
+[Node.js服务] --写--> [MySQL主库] --同步--> [MySQL从库]
+         |--读----------------------->|
+```
+
+### 3. Node.js读写分离配置示例（Sequelize）
+```js
+const { Sequelize } = require('sequelize');
+const sequelize = new Sequelize('db', 'user', 'pwd', {
+  replication: {
+    read: [
+      { host: 'slave1', username: 'user', password: 'pwd' },
+      { host: 'slave2', username: 'user', password: 'pwd' }
+    ],
+    write: { host: 'master', username: 'user', password: 'pwd' }
+  },
+  pool: { max: 20, min: 2 }
+});
+```
+
+### 4. 高并发高可用设计要点
+- **连接池**：合理配置连接池，提升并发处理能力。
+- **分库分表**：大表/高并发场景可按业务分库分表，降低单库压力。
+- **读写分离**：读多写少场景下，读请求分摊到多个从库。
+- **主从切换**：自动故障转移，保障服务连续性。
+- **中间件**：可用ProxySQL、Atlas等数据库中间件实现读写分离、负载均衡。
+- **分布式ID**：避免自增主键冲突，推荐雪花算法、UUID等。
+- **幂等与重试**：高并发下接口需幂等，失败自动重试。
+
+### 5. 数据同步失败的应对措施（监控、代码、配置多层面详解）
+
+#### 1. 监控与告警
+- **数据库层监控**：
+  - 配置Prometheus + mysqld_exporter，采集主从延迟（Seconds_Behind_Master）、复制状态等指标。
+  - Grafana可视化主从延迟、复制中断等告警。
+  - 关键SQL：
+    ```sql
+    SHOW SLAVE STATUS\G
+    -- 关注 Seconds_Behind_Master、Last_IO_Error、Last_SQL_Error 等字段
+    ```
+- **自动化告警脚本**：
+  - 定时任务检测主从延迟，超阈值时自动发邮件/钉钉/微信告警。
+    ```bash
+    #!/bin/bash
+    delay=$(mysql -e "SHOW SLAVE STATUS\G" | grep Seconds_Behind_Master | awk '{print $2}')
+    if [ "$delay" -gt 10 ]; then
+      curl -X POST ... # 发送告警
+    fi
+    ```
+
+#### 2. 代码层处理
+- **读写路由降级**：
+  - Node.js应用检测到从库延迟/异常时，自动将读请求切换到主库。
+  - 伪代码：
+    ```js
+    async function safeRead(query) {
+      const delay = await getSlaveDelay();
+      if (delay > 10) {
+        // 读主库
+        return masterDb.query(query);
+      } else {
+        // 读从库
+        return slaveDb.query(query);
+      }
+    }
+    ```
+- **数据版本校验**：
+  - 读写时带上数据版本号/时间戳，发现数据过旧时自动重试或提示用户。
+- **幂等与重试**：
+  - 写操作失败时自动重试，保证幂等性，避免重复写入。
+
+#### 3. 配置层处理
+- **MySQL主从复制配置**：
+  - `slave_net_timeout`、`master_connect_retry`等参数优化，提升断链自动重连能力。
+  - `read_only=1` 配置从库只读，防止误写。
+- **连接池配置**：
+  - Node.js ORM（如Sequelize）合理配置连接池参数，提升高并发下的稳定性。
+    ```js
+    const sequelize = new Sequelize('db', 'user', 'pwd', {
+      pool: { max: 20, min: 2, acquire: 30000, idle: 10000 }
+    });
+    ```
+- **中间件配置**：
+  - ProxySQL/Atlas等中间件可自动检测主从状态，自动切换读写路由。
+
+#### 4. 自动修复与补偿
+- **自动重建从库**：
+  - 运维脚本定期校验主从一致性，发现严重不一致时自动重建。
+- **数据校验与同步**：
+  - 使用pt-table-checksum、pt-table-sync等工具定期校验和同步主从数据。
+- **手动补偿**：
+  - 通过mysqldump全量导出主库，恢复到从库，再用binlog补齐增量。
+
+#### 5. 业务容错与最终一致性
+- **降级与提示**：
+  - 业务层检测到数据不一致时，降级处理或提示用户稍后重试。
+- **补偿任务队列**：
+  - 关键写操作失败时，记录补偿任务，后续自动重试或人工介入。
+
+---
+
+> 监控、代码、配置、自动修复、业务容错需协同配合，才能保障MySQL主从架构下高可用和数据一致性。
+
+### 6. 典型Node.js微服务目录结构
+```plaintext
+order-service/
+├── src/
+│   ├── order.controller.js
+│   ├── order.service.js
+│   └── db.js
+user-service/
+├── src/
+│   ├── user.controller.js
+│   ├── user.service.js
+│   └── db.js
+```
+
+### 7. 代码片段：高可用写入与幂等处理
+```js
+// 幂等写入示例
+async function createOrder(orderId, data) {
+  const [order, created] = await Order.findOrCreate({ where: { orderId }, defaults: data });
+  if (!created) {
+    // 已存在，幂等返回
+    return order;
+  }
+  return order;
+}
+```
+
+### 8. 主表与子表同步失败的应对方案（详细说明）
+
+#### 1. 场景与常见原因
+- **主表（如订单表）写入成功，但子表（如订单明细、日志、状态表）同步失败**。
+- 常见原因：
+  - 主表和子表分布在不同库/分片，网络/事务/复制异常导致部分写入失败。
+  - 业务代码未做分布式事务，主表写成功但子表写失败。
+  - 主从延迟/断链，主表数据已同步，从库子表未及时同步。
+
+#### 2. 自动监控手段
+- **数据一致性校验**：
+  - 定期用脚本/工具比对主表与子表的关联数据（如订单有无明细、状态等）。
+  - 工具：pt-table-checksum、定制SQL脚本、数据校验平台。
+- **业务层监控**：
+  - 关键写操作后，业务代码主动校验主表与子表数据是否齐全，发现异常自动上报。
+- **告警系统**：
+  - 监控主表与子表数据量差异、异常写入日志，自动触发告警。
+
+#### 3. 自动修复与补偿
+- **补偿任务队列**：
+  - 关键写操作失败时，将失败的子表写入操作记录到补偿队列（如MQ、任务表），后续自动重试。
+  - 代码示例：
+    ```js
+    async function createOrderWithDetail(order, detail) {
+      const t = await sequelize.transaction();
+      try {
+        const orderRes = await Order.create(order, { transaction: t });
+        try {
+          await OrderDetail.create(detail, { transaction: t });
+          await t.commit();
+        } catch (e) {
+          // 子表写失败，记录补偿任务
+          await CompensationTask.create({ type: 'order_detail', data: detail });
+          await t.commit(); // 主表已写，保证幂等
+        }
+      } catch (e) {
+        await t.rollback();
+        throw e;
+      }
+    }
+    ```
+- **定时自动补偿脚本**：
+  - 定时扫描补偿任务表，自动重试写入子表，成功后标记完成。
+- **数据修复脚本**：
+  - 定期比对主表与子表，发现缺失数据自动补齐。
+    ```sql
+    -- 查找主表有但子表无的订单
+    SELECT o.id FROM orders o LEFT JOIN order_detail d ON o.id = d.order_id WHERE d.id IS NULL;
+    ```
+    - 可用脚本自动补写缺失的子表数据。
+
+#### 4. 业务容错与最终一致性
+- **读操作降级**：
+  - 查询订单时发现明细缺失，可提示用户"数据处理中"，后台自动补偿。
+- **最终一致性**：
+  - 允许短暂不一致，通过补偿、重试、定期校验等手段，最终保证主表与子表数据一致。
+
+#### 5. 运维与平台化实践
+- **平台化监控**：
+  - 数据平台/运维平台可自动监控主子表一致性，异常自动修复或推送工单。
+- **自动化运维工具**：
+  - 结合Prometheus、定时任务、补偿服务，实现全链路自动监控与修复。
+
+---
+
+> 主子表同步失败不可避免，需监控、补偿、自动修复、业务容错多管齐下，保障数据最终一致性和用户体验。
+
+---
+
+> MySQL主从+读写分离+分库分表+幂等重试，是Node.js高并发高可用微服务架构的核心实践。同步失败需监控、自动修复与业务容错多管齐下。

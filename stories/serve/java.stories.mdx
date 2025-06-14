@@ -1,0 +1,85 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/java" />
+
+## java入门与工程体系介绍
+
+### 现代Java企业级工程体系与技术栈
+
+现代Java企业级工程体系涵盖了从开发、测试、部署、运维到监控和扩容的全生命周期，通常包括如下技术栈和体系：
+
+#### 1. 开发阶段
+- **编程语言**：Java 17+（LTS版本）、Kotlin（部分场景）
+- **开发框架**：Spring Boot、Spring Cloud、Spring MVC、MyBatis、JPA、Hibernate
+- **构建工具**：Maven、Gradle
+- **API设计**：RESTful API、GraphQL、gRPC
+- **前后端分离**：前端常用React/Vue/Angular，后端提供API
+- **单元测试/集成测试**：JUnit、Mockito、Testcontainers、Spring Test
+- **代码质量**：SonarQube、Checkstyle、PMD、SpotBugs
+
+#### 2. 持续集成与交付（CI/CD）
+- **CI/CD平台**：Jenkins、GitLab CI、GitHub Actions、ArgoCD
+- **代码管理**：Git（GitHub、GitLab、Gitee等）
+- **自动化测试与部署**：Pipeline自动化构建、测试、部署
+
+#### 3. 运维与部署
+- **容器化**：Docker
+- **编排与管理**：Kubernetes（K8s）、Helm
+- **服务注册与发现**：Eureka、Consul、Nacos
+- **配置中心**：Spring Cloud Config、Nacos Config
+- **服务网关**：Spring Cloud Gateway、Kong、Nginx
+- **负载均衡**：Nginx、K8s Ingress、Ribbon
+
+#### 4. 监控与告警
+- **监控系统**：Prometheus、Grafana、Spring Boot Actuator、Micrometer
+- **日志收集**：ELK（Elasticsearch、Logstash、Kibana）、EFK（Fluentd）
+- **分布式追踪**：Zipkin、Jaeger、SkyWalking
+- **告警系统**：Alertmanager、钉钉/企业微信/邮件集成
+
+#### 5. 扩容与高可用
+- **自动扩容**：Kubernetes HPA（Horizontal Pod Autoscaler）
+- **高可用架构**：多实例部署、负载均衡、分布式缓存（Redis Cluster）、数据库主从/分库分表
+- **容灾备份**：多机房部署、定期备份、灰度发布、蓝绿部署
+
+#### 6. 云原生与云服务
+- **云平台**：阿里云、腾讯云、华为云、AWS、Azure、Google Cloud
+- **云原生技术**：Kubernetes、Service Mesh（Istio）、Serverless（FaaS）
+- **中间件**：云数据库、消息队列（RocketMQ、Kafka）、对象存储（OSS、S3）
+
+#### 7. 安全与合规
+- **安全加固**：HTTPS、JWT/OAuth2、API网关限流、WAF
+- **合规审计**：日志审计、权限管理、数据加密
+
+---
+
+现代Java企业级工程体系强调自动化、标准化、可观测性和弹性扩展，助力企业高效、稳定地交付和运维大规模分布式系统。
+
+### 8. 云开发（Cloud Development）
+
+云开发是一种 Serverless 一体化开发平台，开发者无需关注服务器运维，专注于业务逻辑开发。常见云开发平台有腾讯云 CloudBase、阿里云云开发、华为云开发等。
+
+- **特性**：
+  - 无需自建服务器，资源弹性伸缩
+  - 一体化云端能力（数据库、存储、鉴权、函数计算、API 网关等）
+  - 前后端一体化开发体验，适合小程序、Web、移动端等多端应用
+  - 支持云函数（FaaS）、云数据库、云存储、云托管等
+  - 自动化运维、监控、日志、告警
+
+- **常见场景**：
+  - 快速原型开发
+  - 小程序/移动端/轻量级Web应用
+  - 事件驱动型后端
+  - 低运维成本的中小型项目
+
+- **代表平台**：
+  - 腾讯云 CloudBase
+  - 阿里云云开发
+  - 华为云开发平台
+  - Firebase（Google）
+
+
+
+
+

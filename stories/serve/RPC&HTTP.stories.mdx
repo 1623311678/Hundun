@@ -1,0 +1,94 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/服务端/RPC与HTTP" />
+
+## RPC与HTTP通信详解
+
+### 1. 基本概念
+- **HTTP通信**：基于HTTP协议的远程调用，常见于RESTful API、GraphQL等，数据格式多为JSON、XML。
+- **RPC（Remote Procedure Call）**：远程过程调用，像调用本地方法一样调用远程服务，常见协议有gRPC、Dubbo、Thrift等，数据格式多为二进制（如Protobuf）。
+
+---
+
+### 2. 优缺点对比
+| 特性         | HTTP通信（RESTful等）         | RPC通信（gRPC/Dubbo等）         |
+|--------------|-------------------------------|---------------------------------|
+| 协议         | HTTP/1.1/2，开放标准          | 多为自定义协议/HTTP2            |
+| 数据格式     | JSON/XML                      | 二进制（Protobuf/Thrift等）     |
+| 性能         | 一般，文本传输                | 高，二进制高效                  |
+| 易用性       | 简单直观，易调试              | 需IDL，学习曲线高                |
+| 兼容性       | 跨语言、跨平台好              | 多语言支持但需生成代码           |
+| 文档/生态     | 丰富，工具多                  | 依赖特定生态                    |
+| 流式/推送     | 支持有限                      | 支持双向流、推送                 |
+| 网关/安全     | 生态成熟，易集成              | 需配合特定网关/安全组件          |
+
+---
+
+### 3. 典型使用场景
+- **HTTP通信**：
+  - 对外开放API、Web前后端分离、移动端接口、第三方集成
+  - 需要兼容性、易用性、调试友好
+- **RPC通信**：
+  - 微服务内部高性能通信、服务间调用、数据量大、低延迟场景
+  - 需要强类型、接口自动生成、双向流、批量处理
+
+---
+
+### 4. 现代微服务架构的通信方式
+- 微服务架构既可用HTTP（RESTful）也可用RPC（gRPC、Dubbo等），选择取决于业务需求：
+  - **对外接口**：多用HTTP/RESTful，兼容性好，易于开放
+  - **服务内部**：多用RPC，性能高、强类型、支持流式
+- 现代主流：Spring Cloud（HTTP+Feign）、gRPC、Dubbo等
+
+---
+
+### 5. 示例对比
+**HTTP调用示例（RESTful）**
+```http
+POST /api/order
+Content-Type: application/json
+{
+  "userId": 1,
+  "amount": 100
+}
+```
+
+**gRPC调用示例**
+```proto
+service OrderService {
+  rpc CreateOrder (OrderRequest) returns (OrderReply);
+}
+message OrderRequest { int32 userId = 1; int32 amount = 2; }
+message OrderReply { string status = 1; }
+```
+
+---
+
+> 现代微服务架构通常对外HTTP、内部RPC，需结合团队技术栈、性能、安全、运维等多方面综合考量。
+
+## RPC为什么快？
+
+1. **二进制序列化高效**
+   - RPC常用Protobuf、Thrift等二进制协议，编码/解码速度快，数据体积小，网络传输效率高。
+   - 对比HTTP+JSON，二进制格式更紧凑，解析速度远高于文本格式。
+
+2. **基于HTTP/2或自定义协议**
+   - gRPC等基于HTTP/2，支持多路复用、头部压缩、长连接，减少握手和延迟。
+   - 传统RESTful基于HTTP/1.1，连接复用和并发能力有限。
+
+3. **连接复用与长连接**
+   - RPC框架通常采用长连接，避免频繁建立/关闭连接，降低延迟。
+   - 支持多路复用，多个请求可共用一条连接，提升吞吐量。
+
+4. **强类型与自动代码生成**
+   - 接口强类型，序列化/反序列化自动化，减少数据转换和校验开销。
+
+5. **批量与流式处理**
+   - 支持批量请求、流式数据传输，减少多次网络往返。
+
+---
+
+> 总结：RPC快的核心在于二进制高效序列化、协议优化（HTTP/2）、连接复用和流式能力，适合高性能微服务内部通信。
+
