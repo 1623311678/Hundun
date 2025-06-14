@@ -1,0 +1,254 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/React/批量更新" />
+
+# React 的批量更新原理与时机
+
+React 的"批量更新"是指：在某些场景下，多个 setState（或 useState）操作会被合并（批处理），只触发一次渲染和 DOM 更新，从而提升性能。
+
+## 1. 批量更新的典型时机
+
+- **React 合成事件**（如 onClick、onChange 等 React 事件处理函数内）
+- **生命周期函数**（如 componentDidMount、componentDidUpdate 等）
+- **Effect 钩子**（如 useEffect 内）
+
+在这些场景下，连续多次 setState 会被 React 自动合并，只触发一次渲染。
+
+**示例：**
+```jsx
+function App() {
+  const [a, setA] = useState(0);
+  const [b, setB] = useState(0);
+  const handleClick = () => {
+    setA(a + 1);
+    setB(b + 1);
+    // 这里 setA 和 setB 会被批量处理，只触发一次渲染
+  };
+  return <button onClick={handleClick}>Click</button>;
+}
+```
+
+## 2. 定时器（setTimeout/setInterval）等异步场景
+
+### React 17 及以前
+- 在 setTimeout、setInterval、Promise.then、原生事件等异步场景下，**不会自动批量更新**，每次 setState 都会单独触发一次渲染。
+
+**示例：**
+```jsx
+setTimeout(() => {
+  setA(a + 1);
+  setB(b + 1);
+  // React 17 及以前：会触发两次渲染
+}, 0);
+```
+
+### React 18 及以后
+- 引入了"自动批处理（Automatic Batching）"，**绝大多数场景下都自动批量更新**，包括 setTimeout、Promise.then、async/await、原生事件等。
+
+**示例：**
+```jsx
+setTimeout(() => {
+  setA(a + 1);
+  setB(b + 1);
+  // React 18：只触发一次渲染
+}, 0);
+```
+
+## 3. 批量更新与事件循环的关系
+
+### 什么是一次事件循环？
+- **一次事件循环（event loop）**，是指 JavaScript 执行线程从"事件队列"中取出一个任务（宏任务），执行完所有同步代码和相关的微任务（microtasks），然后进入下一轮循环。
+- **时间长度**不是固定的，而是"本轮宏任务+所有微任务"全部执行完毕为止。
+
+### 批量更新发生在哪个时机？
+- **React 的批量更新**，本质上是：在同一轮事件循环（event loop）内收集到的所有 setState，会在本轮宏任务和所有微任务执行完毕后，统一进行一次渲染（flush）。
+- 也就是说，**批量更新的触发点，通常是在本轮事件循环的末尾**，即：当前宏任务（如合成事件、setTimeout 回调、Promise.then 回调等）和所有微任务（Promise.then、queueMicrotask 等）都执行完毕后，React 才会统一处理所有收集到的 state 更新。
+
+### 具体流程
+1. **你在同一轮事件循环内多次 setState**（无论是同步代码、微任务还是宏任务，只要在同一轮 event loop 内）。
+2. **React 会暂存这些 state 更新**，而不是立即渲染。
+3. **等到本轮事件循环的所有任务（宏+微）都执行完毕**，React 才会统一批量处理这些 state 更新，进行一次渲染。
+
+### 结合事件循环模型举例
+```js
+setTimeout(() => {
+  setState1(); // 1
+  Promise.resolve().then(() => {
+    setState2(); // 2
+  });
+  setState3(); // 3
+}, 0);
+```
+- 这里 setTimeout 是一个宏任务，setState1 和 setState3 在宏任务中，setState2 在微任务中。
+- **只要它们都在同一轮事件循环内**，React 18 会把这三次 setState 批量合并，等到本轮宏任务和所有微任务都执行完后，统一渲染。
+
+### 关键点总结
+- **批量更新的"收集窗口"就是一次事件循环（event loop）**。
+- **React 18**：无论 setState 发生在同步、微任务还是宏任务，只要在同一轮事件循环内，都会被批量处理。
+- **渲染时机**：在本轮事件循环的所有同步任务、微任务、宏任务都执行完毕后，React 统一渲染。
+
+#### 参考图示
+```
+┌───────────── event loop ─────────────┐
+│                                     │
+│  [同步任务]                         │
+│  [微任务队列]                       │
+│  [setTimeout/setInterval 回调]       │
+│  ...                                │
+│  (本轮所有 setState 都被收集)        │
+│                                     │
+│  → 事件循环末尾，React 统一渲染      │
+└─────────────────────────────────────┘
+```
+
+## 4. 批量更新的本质
+
+- React 会收集同一事件循环（event loop）内的所有 setState 操作，在本轮事件循环结束后统一执行渲染。
+- 这样可以减少不必要的重复渲染，提高性能。
+
+## 5. 手动批量更新
+
+如果遇到特殊场景（如第三方回调）需要手动批量更新，可以用：
+```js
+import { unstable_batchedUpdates } from 'react-dom';
+unstable_batchedUpdates(() => {
+  setA(a + 1);
+  setB(b + 1);
+});
+```
+
+## 6. 总结表
+
+| 场景/版本         | React 17 及以前 | React 18 及以后 |
+|-------------------|----------------|----------------|
+| 合成事件          | 批量           | 批量           |
+| 生命周期/Effect   | 批量           | 批量           |
+| setTimeout        | 非批量         | 批量           |
+| Promise.then      | 非批量         | 批量           |
+| 原生事件          | 非批量         | 批量           |
+
+## 7. 结论
+
+- **React 17 及以前**：只有合成事件和生命周期内是批量更新，异步/原生事件不是。
+- **React 18 及以后**：绝大多数场景都自动批量更新。
+- **定时器（setTimeout/setInterval）**：React 18 及以后会自动批量，React 17 及以前不会。
+- **批量更新的窗口就是一次事件循环，渲染发生在本轮事件循环的末尾。**
+
+## 8. 关于"本轮宏任务"与异步宏任务的补充说明
+
+- **本轮宏任务**，严格来说，是指当前事件循环（event loop）中正在执行的那个宏任务（macrotask）。
+- 典型的宏任务有：主线程执行的同步代码、`setTimeout`/`setInterval` 回调、`MessageChannel`、`requestAnimationFrame` 等。
+- **每一个异步宏任务（如 setTimeout 回调）都会开启一个新的事件循环轮次**，即每个宏任务是独立的 event loop 轮次。
+- 所以，"本轮宏任务"**不包括**下一个 setTimeout、setInterval、I/O 等异步宏任务的内容。
+- 只有在**同一个宏任务及其所有微任务**中发生的 setState，才会被 React 18 批量收集。
+
+**例子：**
+```js
+setTimeout(() => {
+  // 这是一个新的宏任务（事件循环轮次）
+  setState1();
+  Promise.resolve().then(() => {
+    setState2();
+  });
+  setState3();
+}, 0);
+
+setTimeout(() => {
+  // 这是另一个新的宏任务（下一个事件循环轮次）
+  setState4();
+}, 0);
+```
+- setState1、setState2、setState3 会被批量合并（同一轮事件循环）。
+- setState4 在下一个事件循环轮次（新的宏任务），**不会和上面三个合并**。
+
+**总结：**
+- **本轮宏任务**只包括当前事件循环的同步代码和所有微任务。
+- **异步宏任务**（如下一个 setTimeout 回调）属于下一个事件循环轮次，不属于"本轮宏任务"。
+- React 的批量更新窗口是"同一轮事件循环"，即当前宏任务及其所有微任务。
+```
+
+## 9. 哪些情况会开辟新的宏任务？
+
+除了 setTimeout，以下情况也会开辟新的宏任务（macrotask），即开启新的事件循环轮次：
+
+| 场景/API                | 说明                                                         |
+|-------------------------|--------------------------------------------------------------|
+| `setTimeout`            | 最常用的宏任务调度器，延迟执行回调                           |
+| `setInterval`           | 定时重复执行回调，每次回调都是新宏任务                       |
+| `setImmediate`          | Node.js 环境下，立即执行回调（比 setTimeout 更快）           |
+| `MessageChannel`        | 浏览器端的消息通道，`port.postMessage` 触发新宏任务           |
+| `requestAnimationFrame` | 浏览器端，下一帧渲染前执行回调，每次回调是新宏任务            |
+| `I/O`                   | 如文件读取、网络请求（如 XMLHttpRequest、fetch 的 onload）    |
+| `UI 事件`               | 如 click、input、scroll 等 DOM 事件监听器回调                 |
+| `Promise.finally`       | 如果 finally 返回的是一个新的 Promise，可能会触发新宏任务      |
+
+**注意：**
+- 所有 DOM 事件（如 click、input、scroll、keydown 等）回调，都是在新的宏任务中执行的。
+- Node.js 下还有 `setImmediate`（宏任务）、`process.nextTick`（微任务，非宏任务）。
+
+### 宏任务与微任务的区别
+- **宏任务（macrotask）**：每个宏任务是事件循环的一个轮次，执行完毕后会清空所有微任务队列。
+- **微任务（microtask）**：如 `Promise.then`、`MutationObserver`、`queueMicrotask`，会在当前宏任务结束后、下一个宏任务开始前全部执行完。
+
+**典型宏任务 API 示例：**
+```js
+setTimeout(() => {
+  // 新的宏任务
+}, 0);
+
+setInterval(() => {
+  // 每次回调都是新的宏任务
+}, 1000);
+
+const channel = new MessageChannel();
+channel.port1.onmessage = () => {
+  // 新的宏任务
+};
+channel.port2.postMessage('msg');
+
+requestAnimationFrame(() => {
+  // 新的宏任务（下一帧）
+});
+```
+
+**总结：**
+- 会开辟新宏任务的常见情况有：`setTimeout`、`setInterval`、`MessageChannel`、`requestAnimationFrame`、各类 I/O 回调、所有 DOM 事件回调、Node.js 的 `setImmediate`。
+- **微任务**（如 Promise.then、queueMicrotask）不会开辟新宏任务，只会在当前宏任务结束后立即执行。
+
+## 10. 哪些事件/操作会开启新的事件循环轮次？
+
+在 JavaScript 中，**每个宏任务的开始就是新的一轮事件循环**。下列事件/操作会让 JS 进入下一个事件循环轮次：
+
+### 会开启新事件循环的典型场景
+
+- **setTimeout / setInterval**：每次回调都是新事件循环。
+- **MessageChannel**：`port.postMessage` 触发的回调。
+- **requestAnimationFrame**：每一帧的回调。
+- **I/O 操作**：如网络请求（XMLHttpRequest、fetch 的 onload/then）、文件读取等异步 I/O 回调。
+- **DOM 事件**：如 click、input、scroll、keydown 等，事件监听器回调每次都是新事件循环。
+- **setImmediate**（Node.js）：每次回调。
+
+### 不会开启新事件循环的场景
+
+- **微任务**（如 Promise.then、queueMicrotask、MutationObserver）：这些只会在当前宏任务结束后、下一个宏任务开始前执行，不会单独开启新的事件循环。
+- **process.nextTick**（Node.js）：属于微任务，不会开启新事件循环。
+
+### 总结表
+
+| 场景/事件                | 是否开启新事件循环 |
+|-------------------------|-------------------|
+| setTimeout/setInterval  | 是                |
+| MessageChannel          | 是                |
+| requestAnimationFrame   | 是                |
+| I/O 回调                | 是                |
+| DOM 事件（click等）     | 是                |
+| setImmediate (Node.js)  | 是                |
+| Promise.then            | 否（微任务）      |
+| queueMicrotask          | 否（微任务）      |
+| process.nextTick        | 否（微任务）      |
+
+### 本质说明
+- **每个宏任务的开始就是新的一轮事件循环。**
+- 只要是宏任务队列中的新任务（如上面列举的场景），就会开启新的事件循环。
+- 微任务只是在当前宏任务内追加执行，不会单独开启事件循环。

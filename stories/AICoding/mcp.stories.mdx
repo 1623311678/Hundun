@@ -47,30 +47,7 @@ https://github.com/GLips/Figma-Context-MCP?tab=readme-ov-file
 
 ## 3. Node.js/TypeScript实现Markdown转HTML MCP
 
-### 3.1 最简命令行工具
-```ts
-// bin/md2html.ts
-import * as fs from 'fs';
-import { marked } from 'marked';
-const [,, input, output] = process.argv;
-const md = fs.readFileSync(input, 'utf-8');
-const html = marked.parse(md);
-fs.writeFileSync(output, html);
-```
-
-### 3.2 HTTP API服务
-```ts
-// src/server.ts
-import express from 'express';
-import { marked } from 'marked';
-const app = express();
-app.use(express.text({ type: 'text/markdown' }));
-app.post('/markdown2html', (req, res) => {
-  const html = marked.parse(req.body);
-  res.type('html').send(html);
-});
-app.listen(3000);
-```
+参考 https://github.com/1623311678/markdown-to-html-mcp
 
 ---
 
