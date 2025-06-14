@@ -1,0 +1,86 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/现代高可用软件设计/小程序-H5性能优化方案" />
+
+# 小程序/H5 性能优化方案
+
+## 1. 首屏加载优化
+- 资源预加载与懒加载，减少首屏资源体积
+- 首页骨架屏/Loading占位，提升感知速度
+- 小程序分包加载，H5路由懒加载（如Vue/React动态import）
+- 预渲染/SSR（如Next.js、Nuxt.js）提升首屏渲染速度
+
+---
+
+## 2. 资源加载与网络优化
+- 静态资源CDN分发，OSS/云存储加速，减少跨地域延迟
+- 图片WebP/AVIF等新格式，按需加载、懒加载、压缩
+- JS/CSS压缩、Tree Shaking、去除无用依赖
+- 小程序/SPA开启Gzip/Brotli压缩，HTTP2/3多路复用
+- 资源缓存（Service Worker、AppCache、小程序缓存API）
+- DNS预解析、预连接、预获取（dns-prefetch、preconnect、prefetch、preload）
+
+---
+
+## 3. 渲染与交互优化
+- 虚拟列表、长列表分片渲染，避免一次性渲染过多节点
+- 小程序/SPA避免频繁setData/setState，合并更新，减少重绘
+- 组件懒加载、按需渲染，避免全量渲染
+- 使用Web Worker/小程序Worker分担计算密集型任务
+- 合理拆分大页面为小组件，提升复用与渲染效率
+
+---
+
+## 4. 代码分包与体积优化
+- 小程序分包（主包+分包/独立分包），主包≤2M，分包≤2M，按需加载
+- H5/SPA路由懒加载、动态import，减少主包体积
+- 公共依赖提取（如vendor.js），避免重复打包
+- 代码压缩、去除console/log/debug代码
+- 使用CDN外链大库（如lodash、moment）
+
+---
+
+## 5. 图片、字体与多媒体优化
+- 图片压缩、格式转换（WebP/AVIF），多分辨率适配
+- 小程序image组件/图片懒加载，H5用IntersectionObserver
+- 雪碧图/ICONFONT/字体子集，减少HTTP请求
+- 视频/音频分片加载、首帧优化、自动降码率
+
+---
+
+## 6. 网络与数据缓存优化
+- 接口合并/批量请求，减少HTTP请求数
+- 使用HTTP缓存（ETag/Last-Modified）、本地缓存（localStorage、IndexedDB、小程序Storage）
+- 数据预取、离线包、增量更新
+- 异步请求并发控制，超时重试、降级兜底
+
+---
+
+## 7. 监控与性能调优
+- 接入前端监控（如ARMS、Sentry、Fundebug、神策等），采集白屏、慢接口、JS错误、资源加载、FPS等
+- 小程序/SPA开启性能面板，定期分析慢点、内存泄漏、卡顿
+- 埋点首屏时间、TTI、FCP、LCP、CLS等核心指标
+- 自动化性能测试（Lighthouse、PageSpeed、微信小程序助手）
+
+---
+
+## 8. 其他最佳实践
+- 业务无关代码异步加载，首屏只加载核心功能
+- 组件/页面按需注册，减少全局依赖
+- 关注小程序/SPA平台限制（包体积、API调用频率、setData限制等）
+- 定期分析依赖包体积，升级/替换大依赖
+- 结合Serverless/云函数，后端预处理数据，减轻前端压力
+
+---
+
+## 9. 企业级案例与参考资料
+- 京东、阿里、腾讯、字节等大厂小程序/H5均采用分包、CDN、骨架屏、懒加载、监控等全链路优化
+- 参考：
+  - [微信小程序性能优化官方指南](https://developers.weixin.qq.com/miniprogram/dev/framework/performance/perf-guide.html)
+  - [阿里云前端性能优化实践](https://developer.aliyun.com/article/771857)
+  - [Google Web Vitals](https://web.dev/vitals/)
+  - [Taro/uni-app官方优化文档]
+
+> 小程序与H5性能优化需全链路协同，建议结合业务场景、平台特性与监控数据，持续迭代优化，提升用户体验与业务转化。

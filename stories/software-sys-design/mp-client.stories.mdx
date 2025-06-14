@@ -1,0 +1,148 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/现代高可用软件设计/基于小程序的一码多端架构设计" />
+
+# 基于小程序的一码多端架构设计
+
+## 1. 设计目标与挑战
+- 一套代码，适配微信/支付宝/百度/抖音/QQ/快应用/H5/APP等多端小程序
+- 降低开发/维护成本，提升一致性与交付效率
+- 兼容各平台API、组件、路由、生命周期等差异
+
+---
+
+## 2. 业界主流开源方案对比
+
+| 方案         | 技术栈/语法   | 支持端         | 生态/代表厂商         | 优势                   | 局限                   |
+|--------------|--------------|---------------|----------------------|------------------------|------------------------|
+| uni-app      | Vue2/Vue3    | 微信/支付宝/百度/抖音/QQ/快应用/H5/APP | DCloud、阿里、腾讯   | 生态丰富，插件多，官方云打包 | 复杂原生能力需自定义   |
+| Taro         | React/Vue/Nerv| 微信/支付宝/百度/字节/QQ/快应用/H5/APP | 京东、携程、字节跳动 | 多端支持，React友好      | 生态略逊于uni-app      |
+| Remax        | React        | 微信/支付宝/百度/字节/QQ/H5           | 蚂蚁金服、字节跳动   | 纯React语法，组件化强     | 生态较小，文档偏技术向 |
+| mpx          | 类Vue        | 微信/支付宝/百度/字节/QQ/H5           | 美团                 | 响应式、增强小程序能力    | 生态有限               |
+| mini-program-build | JSX/TS | 微信/支付宝/百度/字节/H5             | 京东                 | 现代工程化，TS支持        | 生态有限               |
+| NutUI        | Vue3/React   | 微信/支付宝/百度/字节/H5/APP         | 京东                 | 组件库丰富，UI一致        | 仅UI层，需配合主框架    |
+
+---
+
+## 3. 方案原理与技术架构
+- 统一业务代码（Vue/React/TS等），通过编译/适配层转换为各端小程序代码（WXML、WXSS、JSON、JS等）
+- 公共业务逻辑/组件最大化复用，平台差异通过条件编译/适配器/polyfill解决
+- 支持多端路由、生命周期、API、组件、事件等统一封装
+- 动态化：部分方案支持远程下发页面/配置，热更新、灰度发布
+
+---
+
+## 4. 典型方案详解与代码示例
+
+### 4.1 uni-app
+- 技术栈：Vue2/Vue3，支持TypeScript
+- 典型代码：
+```vue
+<template>
+  <view>
+    <text>{{ msg }}</text>
+    <button @click="goDetail">跳转</button>
+  </view>
+</template>
+<script>
+export default {
+  data() { return { msg: 'Hello uni-app!' } },
+  methods: {
+    goDetail() { uni.navigateTo({ url: '/pages/detail/detail' }) }
+  }
+}
+</script>
+```
+- 生态：插件市场、云打包、uniCloud、uView、NutUI等
+- 企业案例：阿里、腾讯、京东、支付宝、抖音等大厂小程序/H5/APP项目
+
+### 4.2 Taro
+- 技术栈：React/Vue/Nerv/TS
+- 典型代码：
+```jsx
+import Taro from '@tarojs/taro';
+import { View, Button } from '@tarojs/components';
+export default function Home() {
+  const goDetail = () => Taro.navigateTo({ url: '/pages/detail/index' });
+  return (
+    <View>
+      Hello Taro!
+      <Button onClick={goDetail}>跳转</Button>
+    </View>
+  );
+}
+```
+- 生态：Taro UI、NutUI、Taro Cloud、丰富的插件
+- 企业案例：京东、携程、字节跳动、B站等
+
+### 4.3 Remax
+- 技术栈：React/TS
+- 典型代码：
+```jsx
+import { View, Text } from 'remax/one';
+export default () => <View><Text>Hello Remax!</Text></View>;
+```
+- 生态：Remax Antd、Remax Ali、Remax Wechat
+- 企业案例：蚂蚁金服、字节跳动、B站等
+
+### 4.4 mpx
+- 技术栈：类Vue/TS
+- 典型代码：
+```js
+// mpx页面
+import { createPage } from '@mpxjs/core';
+createPage({
+  data: { msg: 'Hello mpx!' },
+  methods: {
+    goDetail() { this.$router.push('/pages/detail') }
+  }
+});
+```
+- 生态：美团、mpt-ui、mpx-cloud
+- 企业案例：美团、快手等
+
+### 4.5 mini-program-build
+- 技术栈：JSX/TS
+- 典型代码：
+```jsx
+export default () => <view>Hello mini-program-build!</view>;
+```
+- 生态：京东、现代工程化工具链
+
+### 4.6 NutUI
+- 技术栈：Vue3/React，UI组件库
+- 典型代码：
+```vue
+<template>
+  <nut-button type="primary">主要按钮</nut-button>
+</template>
+```
+- 生态：Taro/uni-app/小程序/H5/APP均可用
+
+---
+
+## 5. 路由、API、组件适配
+- 路由：各方案均提供统一路由API（如uni.navigateTo、Taro.navigateTo、Remax的usePageEvent等）
+- API：统一API封装，底层适配各端（如uni.request、Taro.request、Remax API等）
+- 组件：跨端组件库（NutUI、uView、Taro UI等），支持多端一致UI
+- 条件编译：支持`#ifdef MP-WEIXIN`等多端差异处理
+
+---
+
+## 6. 动态化与灰度发布
+- uni-app、Taro等支持远程下发页面/配置，热更新、A/B测试、灰度发布
+- 支持云函数/Serverless，弹性扩展
+
+---
+
+## 7. 企业级最佳实践
+- 选型优先生态成熟、文档完善、社区活跃的方案（如uni-app、Taro）
+- 公共业务逻辑/组件最大化复用，平台差异通过适配层/条件编译解决
+- 统一API、路由、组件库，提升多端一致性
+- 结合CI/CD自动化多端构建与发布，保障交付效率
+- 关注性能优化与平台兼容性，关键场景可用原生能力补充
+- 动态化、灰度、A/B测试提升灵活性与可维护性
+
+> 基于小程序的一码多端架构已成为企业级多端开发主流，建议结合业务需求、团队技术栈与目标平台综合选型，充分利用开源生态与工程化能力，打造高可用、可扩展的多端产品。

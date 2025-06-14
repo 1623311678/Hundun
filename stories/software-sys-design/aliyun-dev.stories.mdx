@@ -1,0 +1,93 @@
+import { Meta } from "@storybook/addon-docs";
+import mvcPng from "../assets/node-mvc.png";
+import mvcFlowPng from "../assets/mvc-flow.png";
+
+<Meta title="Hundun/现代高可用软件设计/云开发架构设计" />
+
+参考阿里云yun开发https://developer.aliyun.com/ebook/6836/read?spm=a2c6h.26392459.ebook-detail.2.15467df3tarkfo
+
+阿里云原生服务平台 https://help.aliyun.com/zh/cap/?spm=a2c4g.11186623.0.0.74c4144962g5BZ
+
+# 基于阿里云的云开发高可用方案
+
+## 1. 方案概述
+- 采用阿里云Serverless（函数计算FC、Serverless应用引擎SAE、云开发平台等）实现弹性、高可用、免运维的轻量级后端架构。
+- 适合API服务、Webhook、定时任务、轻量Web后端、事件驱动等场景。
+
+---
+
+## 2. 架构设计与核心产品
+- **函数计算FC**：按需弹性伸缩，自动容灾，支持Java/Node.js/Golang等多语言，事件驱动（HTTP、定时、消息、对象存储等）
+- **Serverless应用引擎SAE**：支持Spring Boot、Node.js、Golang等Web框架，自动弹性、秒级扩缩容、无状态服务
+- **云开发平台**：一站式Serverless开发，集成数据库、存储、鉴权、API网关等
+- **API网关**：统一入口，流量管理、鉴权、限流、监控
+- **云数据库RDS/表格存储OTS/云存储OSS**：持久化存储
+- **日志服务SLS/ARMS**：全链路监控、日志采集、告警
+
+---
+
+## 3. 高可用与弹性设计
+- 多可用区部署，平台自动容灾
+- 按请求/事件弹性伸缩，无需预置资源，极致性价比
+- 无状态服务，支持秒级扩缩容
+- 平台自动健康检查、故障自愈
+- 结合API网关/SLB实现多入口高可用
+
+---
+
+## 4. 监控与安全
+- SLS/ARMS采集函数/应用日志、调用链、异常、性能指标
+- API网关/SAE支持限流、鉴权、IP白名单、WAF防护
+- 云数据库/存储支持多副本、自动备份、权限隔离
+
+---
+
+## 5. 典型Serverless函数用例
+
+### Java（函数计算FC）
+```java
+package example;
+import com.aliyun.fc.runtime.Context;
+import com.aliyun.fc.runtime.StreamRequestHandler;
+import java.io.*;
+public class Handler implements StreamRequestHandler {
+    @Override
+    public void handleRequest(InputStream input, OutputStream output, Context context) throws IOException {
+        output.write("Hello from Java FC!".getBytes());
+    }
+}
+```
+
+### Node.js（函数计算FC）
+```js
+// index.js
+exports.handler = async (event, context) => {
+  return 'Hello from Node.js FC!';
+};
+```
+
+### Golang（函数计算FC）
+```go
+package main
+import (
+    "context"
+    "github.com/aliyun/fc-runtime-go-sdk/fc"
+)
+func HandleRequest(ctx context.Context, event []byte) (string, error) {
+    return "Hello from Golang FC!", nil
+}
+func main() {
+    fc.Start(HandleRequest)
+}
+```
+
+---
+
+## 6. 最佳实践与建议
+- 业务无状态，函数/应用可随时弹性扩缩容
+- 结合API网关统一入口，支持多协议、鉴权、限流
+- 日志、监控、告警全链路覆盖，快速定位与恢复故障
+- 结合云数据库/存储实现持久化与高可用
+- 充分利用Serverless平台自动弹性、免运维、按量计费优势
+
+> 阿里云Serverless云开发方案适合轻量级、高弹性、免运维场景，支持多语言，极大提升开发与运维效率。
