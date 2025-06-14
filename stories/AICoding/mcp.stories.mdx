@@ -1,0 +1,91 @@
+import { Meta } from "@storybook/addon-docs";
+
+<Meta title="Hundun/AI-Coding/MCP" />
+
+## Mcp
+https://www.cursor-ide.com/blog/cursor-mcp-guide
+
+https://www.cursor-ide.com/blog/cursor-mcp-guide
+
+https://zhuanlan.zhihu.com/p/28320655477
+
+1、自动化测试-playwright-mcp https://github.com/microsoft/playwright-mcp
+
+2、D2C MCP 
+https://aibook.ren/archives/cursor-work-with-figma-mcp-server
+
+https://github.com/GLips/Figma-Context-MCP?tab=readme-ov-file
+
+3、MarkDown转Html MCP  https://glama.ai/mcp/servers/@fashionzzZ/markdown-to-html?locale=zh-CN
+
+4、antd MCP https://glama.ai/mcp/servers/@hannesj/mcp-antd-components?locale=zh-CN
+
+# 什么是MCP？
+
+## 1. 定义与原理
+- MCP（Markdown Content Processor/Model Content Processor）是一类自动化内容处理器，常用于将结构化/半结构化内容（如Markdown、JSON、设计稿等）自动转换为目标格式（如HTML、测试用例、API文档、代码等）。
+- 典型原理：基于规则引擎、模板引擎或AI模型，自动解析输入内容，生成目标产物，支持批量、自动化、可扩展。
+
+---
+
+## 2. 典型场景与开源实现
+
+### 2.1 自动化测试（Playwright MCP）
+- 通过MCP自动生成Playwright测试用例，提升测试开发效率
+- [playwright-mcp](https://github.com/microsoft/playwright-mcp)
+
+### 2.2 D2C（Design to Code）MCP
+- 设计稿（如Figma）自动转为前端代码、组件、文档
+- [Figma-Context-MCP](https://github.com/GLips/Figma-Context-MCP)
+- [D2C MCP 文章](https://aibook.ren/archives/cursor-work-with-figma-mcp-server)
+
+### 2.3 Markdown转HTML MCP
+- 自动将Markdown文档批量转为HTML，支持自定义模板、批量处理、API服务
+- [Markdown转Html MCP](https://glama.ai/mcp/servers/@fashionzzZ/markdown-to-html?locale=zh-CN)
+
+---
+
+## 3. Node.js/TypeScript实现Markdown转HTML MCP
+
+### 3.1 最简命令行工具
+```ts
+// bin/md2html.ts
+import * as fs from 'fs';
+import { marked } from 'marked';
+const [,, input, output] = process.argv;
+const md = fs.readFileSync(input, 'utf-8');
+const html = marked.parse(md);
+fs.writeFileSync(output, html);
+```
+
+### 3.2 HTTP API服务
+```ts
+// src/server.ts
+import express from 'express';
+import { marked } from 'marked';
+const app = express();
+app.use(express.text({ type: 'text/markdown' }));
+app.post('/markdown2html', (req, res) => {
+  const html = marked.parse(req.body);
+  res.type('html').send(html);
+});
+app.listen(3000);
+```
+
+---
+
+## 4. 最佳实践与扩展建议
+- 支持批量转换、目录遍历、模板美化、前端上传/预览
+- 可集成CI/CD、Serverless、云函数等自动化场景
+- 结合AI模型实现更智能的内容理解与转换
+- 统一API协议，便于多端/多语言集成
+
+---
+
+## 5. 参考资料与生态
+- [Cursor MCP官方指南](https://www.cursor-ide.com/blog/cursor-mcp-guide)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
+- [Figma-Context-MCP](https://github.com/GLips/Figma-Context-MCP)
+- [Markdown转Html MCP](https://glama.ai/mcp/servers/@fashionzzZ/markdown-to-html?locale=zh-CN)
+
+> MCP是现代内容自动化处理的关键基础设施，建议结合业务场景与技术栈灵活选型与扩展。

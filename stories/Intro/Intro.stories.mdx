@@ -276,3 +276,69 @@ import Logo from "../assets/logo.png";
     </div>
   </div>
 </footer>
+
+/* @source cursor @line_count 2 @branch feat/xxx*/
+
+## 现代高可用后端、前端、云原生与多端架构全链路最佳实践总结
+
+本节系统性梳理了现代企业级后端、前端、云原生、跨端、Serverless、AI辅助开发等关键技术与最佳实践，涵盖架构设计、落地代码、自动化、监控、性能、安全、企业级案例等全链路内容。
+
+---
+
+### 1. 现代Java/Node.js企业级后端架构与技术栈
+- Java企业级工程全生命周期（开发、运维、部署、上线、监控、扩容、云原生），涉及Spring Boot、Spring Cloud、CI/CD、容器化、Kubernetes、监控、云服务等。
+- 微服务架构设计（以订单服务为例），用Spring Boot、MyBatis、MySQL、Kafka、ES、MQ等，详细目录结构和核心代码。
+- 服务注册与发现、配置中心、网关等微服务基础设施。
+- 消息队列（MQ）详解：作用、场景、常见问题与解决方案，对比RabbitMQ、Kafka、RocketMQ、ActiveMQ，Node.js/Java代码示例，消息可靠性保障。
+- 接口风格与RPC/HTTP通信：RESTful、GraphQL、gRPC、WebSocket、SOAP原理、优缺点、代码示例，RPC与HTTP对比。
+- 代码风格与增量检查：Java项目如何实现Checkstyle、PMD、SpotBugs、SonarQube、Husky、commitlint、lint-staged等，集成方法和配置。
+- Elasticsearch原理与应用：倒排索引、与MySQL B+树对比、Node.js/Java接入代码、倒排表实现与查询过程。
+- 数据库选型与高可用架构：ORM、数据库管理后台、分库分表、读写分离、数据库中间件（ShardingSphere、MyCAT）、主从同步失败应对措施，Node.js/Java代码与运维实践。
+- RDS与Redis：定义、用法、企业生产用途、常见问题、Node.js/Java连接示例、连接池优化、分布式锁、事务等。
+- 后端监控体系：指标覆盖、主流开源软件（Prometheus、Grafana、ELK、Zabbix、Jaeger、SkyWalking）、云平台工具，监控系统落地方案、调用链路追踪原理与最佳实践。
+
+---
+
+### 2. 负载均衡与高可用架构
+- 负载均衡原理、常见方案（L4/L7、Nginx、HAProxy、云SLB、服务网格）、Node.js/Java多实例部署、Nginx手动配置、Docker Compose、Kubernetes、阿里云SLB方案、最佳实践。
+- 云原生高可用架构设计：前后端、基础设施、架构原则、关键技术选型、部署与弹性、监控与容灾、最佳实践，Mermaid架构图。
+- 前端静态资源容灾：多云多CDN、DNS智能切换、自动回源、多级缓存、版本回滚、监控与自动告警、企业级最佳实践，自动化脚本、阿里云操作指引。
+- OSS与CDN区别：定义、作用、核心区别、协同用法、场景举例。
+
+---
+
+### 3. B/S与C/S架构、一码多端与小程序
+- 现代高可用B/S与C/S架构区别：架构原理、前后端分工、技术栈、部署与运维、优缺点、典型场景、现代Web前后端分离模式。
+- 现代C/S架构演进（小程序、一码多端、动态化）：原理、技术实现、与传统C/S区别、典型场景、高可用实践、架构图。
+- 小程序/多端技术的跨平台方案：Taro、uni-app、Flutter、React Native、Electron、H5+容器等主流技术选型、原理、优缺点、架构图、最佳实践。
+- C端一码多端架构设计：主流方案（RN、uni-app、Taro、阿里、腾讯）、桥接层、路由、H5结合、通讯、典型架构图、最佳实践。
+- 详细补充了各主流方案的落地代码、桥接层/路由/通讯实现、企业级案例、CI/CD自动化实践。
+- H5与App（RN等）桥的实现原理、加载方式、双向通信、路由适配、返回路径管理、协议设计、最佳实践、流程图。
+- 基于小程序的一码多端架构设计：uni-app、Taro、Remax、mpx、mini-program-build、NutUI等开源方案对比、原理、代码、企业案例、最佳实践。
+
+---
+
+### 4. 云原生与阿里云高可用架构
+- 基于阿里云的高可用架构设计：整体架构、核心云产品选型、弹性与容灾、监控与安全、前后端高可用、最佳实践。
+- 日志监控（SLS、ARMS）、自动扩容（ESS、ACK）、服务编排（K8s、SAE）、前端资源监控与容灾方案，具体配置示例、自动化脚本、监控大盘模板、企业级落地案例。
+- Node.js服务在K8s上的部署与自动扩容全流程（阿里云主机）：环境准备、镜像构建、YAML编写、部署、HPA自动扩容、进阶实践。
+- deployment.yaml、service.yaml、HPA配置详解，单节点容器数量计算、ACK定义与优势、最佳实践。
+
+---
+
+### 5. 性能优化与AI Coding
+- 小程序/H5性能优化方案：首屏优化、资源加载、渲染优化、网络优化、数据缓存、代码分包、图片与字体优化、监控与调优、企业级案例与参考资料。
+- AI Coding介绍：定义、原理、主流工具（Copilot、Cursor、Tabnine、Codeium、CodeWhisperer、ChatGPT等）、对开发者生活的改变、未来趋势与挑战。
+- MCP（Markdown Content Processor）介绍：定义、原理、主流场景（自动化测试、D2C、Markdown转HTML）、Node.js/TS实现、最佳实践、参考资料。
+- 如何用Node.js/TS实现Markdown转HTML MCP，项目结构、核心代码、API服务、扩展建议。
+- MCP服务发布后在Cursor中的配置方法（面板添加、配置文件、API协议等）。
+
+---
+
+### 6. 其他
+- 所有自动生成的代码前加特定注释（`/* @source cursor @line_count ... @branch ...*/`），并要求严格遵守。
+- 多次涉及企业级最佳实践、CI/CD自动化、动态化、灰度发布、监控与安全、API协议设计等。
+
+---
+
+**整体，整个对话系统性梳理了现代高可用后端、前端、云原生、跨端、Serverless、AI辅助开发等关键技术与最佳实践，涵盖了架构设计、落地代码、自动化、监控、性能、安全、企业级案例等全链路内容。**
