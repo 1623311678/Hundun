@@ -1,0 +1,381 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/React/React19" />
+
+# React 19（2025）新特性与升级详解
+
+## 1. 性能与架构革新
+
+### 1.1 并发渲染默认开启
+- **并发渲染**（Concurrent Rendering）成为默认模式，React 能自动调度高优先级任务，提升大规模应用的响应速度。
+- **示例：**
+  ```jsx
+  const [isPending, startTransition] = useTransition();
+  const handleClick = () => {
+    startTransition(() => {
+      setLargeData(items);
+    });
+  };
+  ```
+
+### 1.2 Server Components & Server Actions
+- **Server Components** 支持直接在服务端渲染部分组件，减少客户端 JS 体积，提升首屏速度和 SEO。
+- **Server Actions** 允许客户端直接调用服务端函数，无需自建 API 路由。
+- **示例：**
+  ```jsx
+  // actions.js
+  'use server';
+  export async function createTodo(data) { /* ... */ }
+
+  // TodoList.jsx
+  "use client";
+  import { createTodo } from './actions';
+  export default function TodoList() {
+    return (
+      <form action={createTodo}>
+        <input name="item" />
+        <button type="submit">Add</button>
+      </form>
+    );
+  }
+  ```
+
+### 1.3 React Compiler
+- 新的 **React Compiler** 自动优化组件、消除冗余渲染，减少对 `useMemo`/`useCallback` 的依赖，提升构建和运行效率。
+
+---
+
+## 2. 新增与升级的 Hooks
+
+### 2.1 useActionState
+- 用于管理异步操作的状态（如表单提交），自动追踪 pending、error 等。
+- **示例：**
+  ```jsx
+  const [error, submitAction, isPending] = useActionState(
+    async (_, newName) => await updateName(newName), null
+  );
+  return (
+    <form onSubmit={submitAction}>
+      <input />
+      <button disabled={isPending}>{isPending ? "Saving..." : "Save"}</button>
+      {error && <p>{error}</p>}
+    </form>
+  );
+  ```
+
+### 2.2 useOptimistic
+- 实现乐观 UI 更新，异步操作未完成前先"假装"数据已变。
+- **示例：**
+  ```jsx
+  const [optimisticValue, setOptimisticValue] = useOptimistic(value);
+  // setOptimisticValue(newValue) 立即让 UI 反映新值
+  ```
+
+### 2.3 useFormStatus
+- 子组件可直接获取父表单的提交状态，无需层层传递。
+- **示例：**
+  ```jsx
+  import { useFormStatus } from 'react-dom';
+  function SubmitButton() {
+    const { pending } = useFormStatus();
+    return <button disabled={pending}>提交</button>;
+  }
+  ```
+
+### 2.4 useEvent
+- 事件回调引用始终稳定，彻底解决闭包陷阱，无需 useCallback。
+- **示例：**
+  ```jsx
+  import { useEvent } from 'react';
+  const handleClick = useEvent(() => { ... });
+  ```
+
+### 2.5 useDeferred
+- 延迟非关键状态更新，提升交互流畅度。
+- **示例：**
+  ```jsx
+  const [value, setValue] = useDeferred('');
+  ```
+
+---
+
+## 3. Suspense 与数据流优化
+
+### 3.1 Suspense 全面升级
+- 支持更强的异步数据流、流式 SSR、自动 fallback 输出。
+- **示例：**
+  ```jsx
+  <Suspense fallback={<Loading />}>
+    <DataComponent />
+  </Suspense>
+  ```
+
+### 3.2 新的 use API
+- 直接在渲染函数中读取 Promise 或 context，简化异步数据获取。
+- **示例：**
+  ```jsx
+  function User() {
+    const user = use(fetchUser());
+    return <div>{user.name}</div>;
+  }
+  ```
+
+---
+
+## 4. 表单与状态管理革新
+
+### 4.1 Actions 简化表单处理
+- `<form action={fn}>` 直接绑定服务端/客户端异步操作，自动管理 pending、error、乐观 UI。
+- **示例：**
+  ```jsx
+  <form action={submitAction}>
+    <input name="name" />
+    <button type="submit">提交</button>
+  </form>
+  ```
+
+### 4.2 useFormStatus 实时反馈
+- 子组件可感知表单状态，便于实现"提交中"禁用、错误提示等。
+
+---
+
+## 5. Ref、Context、元数据等基础能力升级
+
+### 5.1 Ref 作为 Prop 传递
+- 函数组件可直接接收 ref，无需 forwardRef，简化代码。
+- **示例：**
+  ```jsx
+  function MyInput({ ref, ...props }) {
+    return <input ref={ref} {...props} />;
+  }
+  ```
+
+### 5.2 Ref 支持清理函数
+- ref 回调可返回清理函数，组件卸载时自动调用，防止内存泄漏。
+
+### 5.3 Context 直接作为 Provider
+- `<Context value="xxx">` 直接作为 Provider，无需 `<Context.Provider>`。
+
+### 5.4 内置文档元数据、样式、异步脚本、资源预加载支持
+- 新增 `<DocumentHead>` 组件，声明式管理 `<title>`、`<meta>` 等。
+- 支持样式表、异步脚本、资源预加载，提升 SEO 和性能。
+
+---
+
+## 6. 错误边界与 DevTools
+
+- 错误边界（ErrorBoundary）增强，支持更细粒度的错误捕获与恢复。
+- DevTools 支持更强的性能分析、组件高亮、Owner Stack 调试等。
+
+---
+
+## 7. 兼容性与迁移
+
+- 绝大多数 API 向下兼容，`forwardRef`、旧生命周期方法等依然可用，但建议逐步迁移到新模式。
+- TypeScript 支持更完善，类型推断更智能。
+
+---
+
+## 8. 典型升级场景与最佳实践
+
+- **大表单、复杂交互**：用 useActionState、useFormStatus、Actions 简化状态管理。
+- **高性能数据展示**：用并发渲染、Suspense、Server Components 优化首屏和交互。
+- **SEO/SSR 场景**：用 Server Components、DocumentHead、流式 SSR 提升爬虫友好度和首屏速度。
+- **事件与副作用**：用 useEvent、useOptimistic、useDeferred 提升代码健壮性和用户体验。
+
+## React 19 vs React 18 场景对比与原理解析
+
+---
+
+### 1. 大表单、复杂交互
+
+#### React 18
+- **状态管理**：主要依赖 `useState`、`useReducer`，异步操作需手动管理 loading/error 状态。
+- **表单提交**：需自定义事件处理、状态追踪，代码冗长。
+- **表单嵌套组件**：状态需通过 props 层层传递，难以复用。
+
+#### React 19
+- **useActionState**：封装异步操作，自动追踪 pending/error，简化表单/交互逻辑。
+- **useFormStatus**：子组件可直接感知父表单状态，无需 props drilling。
+- **Actions**：`<form action={fn}>` 直接绑定异步/服务端操作，自动管理 optimistic UI、pending/error。
+- **原理**：React 19 在底层为表单和异步操作引入了统一的状态通道（context-like），并结合并发调度，自动处理表单状态流转和副作用。
+
+---
+
+### 2. 高性能数据展示
+
+#### React 18
+- **并发渲染**：需显式用 `createRoot` 和 `useTransition`，并发特性为"可选"。
+- **Suspense**：仅支持懒加载组件，数据 Suspense 需配合实验性 API。
+- **Server Components**：仅 Next.js 等框架实验性支持。
+
+#### React 19
+- **并发渲染**：默认开启，无需显式配置，所有更新自动并发调度。
+- **Suspense**：全面支持异步数据流、流式 SSR，fallback 自动流式输出。
+- **Server Components**：官方稳定支持，服务端渲染与客户端无缝协作。
+- **原理**：React 19 的调度器（Scheduler）升级，所有渲染任务自动分级、可中断。Server Components 通过分层渲染和流式传输，极大提升首屏和交互性能。
+
+---
+
+### 3. SEO/SSR 场景
+
+#### React 18
+- **SSR**：支持流式 SSR（`renderToPipeableStream`），但 Suspense/Server Components 体验有限。
+- **元数据管理**：需第三方库（如 react-helmet）。
+- **SEO 友好度**：Server Components/DocumentHead 不完善。
+
+#### React 19
+- **Server Components**：官方支持，服务端渲染更彻底，减少 JS 体积。
+- **DocumentHead**：内置元数据声明式管理，提升 SEO。
+- **流式 SSR**：与 Suspense/Server Components 深度集成，首屏更快，爬虫更友好。
+- **原理**：React 19 SSR 支持异步分片、流式传输，DocumentHead 通过上下文自动聚合元数据，Server Components 只传递 HTML，无 JS 负担。
+
+---
+
+### 4. 事件与副作用
+
+#### React 18
+- **事件回调**：需用 `useCallback` 保证引用稳定，闭包陷阱多。
+- **乐观 UI**：需手动实现，状态回滚复杂。
+- **副作用调度**：`useEffect`、`useLayoutEffect`，无优先级/延迟机制。
+
+#### React 19
+- **useEvent**：事件回调引用始终稳定，无需 useCallback，彻底解决闭包问题。
+- **useOptimistic**：一行代码实现乐观 UI，自动回滚/同步。
+- **useDeferred**：延迟非关键状态更新，提升交互流畅度。
+- **原理**：useEvent 通过底层"事件上下文"绑定最新闭包，useOptimistic/useDeferred 利用并发调度和状态快照，自动管理 UI 状态与回滚。
+
+#### 副作用调度升级与示例
+
+**React 18 及以前：**
+- 主要依赖 `useEffect`、`useLayoutEffect`，所有副作用在渲染后统一批量执行，无优先级区分。
+- 没有内置延迟/分阶段调度机制，副作用一旦触发就会尽快执行。
+- 在并发渲染下，副作用可能会被多次触发或"撕裂"，需手动规避。
+
+**React 19：**
+- 内部为副作用分配不同优先级（如输入、动画、网络请求等），高优先级副作用优先调度，低优先级可延迟或批量处理。
+- 支持副作用延迟与可中断，结合并发渲染，副作用可在主线程空闲或更合适时机再执行。
+- 新增 `useDeferred`、`useTransition`、`useOptimistic` 等 Hook，底层基于优先级和延迟调度机制。
+- 自动避免"撕裂"现象，副作用与最新 UI 状态同步。
+
+**典型代码对比：**
+
+_React 18：_
+```jsx
+useEffect(() => {
+  // 立即执行副作用
+}, [deps]);
+```
+
+_React 19：_
+```jsx
+const [value, setValue] = useDeferred('');
+useEffect(() => {
+  // 该副作用会被自动延迟，等到主线程空闲时再执行
+}, [value]);
+```
+或结合 `useTransition`：
+```jsx
+const [isPending, startTransition] = useTransition();
+function handleChange(next) {
+  startTransition(() => {
+    setValue(next); // 相关副作用会被延迟
+  });
+}
+```
+
+**总结：**
+- React 19 的副作用调度更智能，能自动分级、延迟、批量处理副作用，提升复杂交互和高性能场景下的体验和健壮性。
+- 开发者无需手动管理副作用优先级，大部分场景下只需用新 Hook 即可享受自动优化。
+
+---
+
+### 总结
+
+- **React 19** 在这些场景下，核心升级在于**自动化、声明式、并发化**，极大减少手工状态管理、事件处理和副作用调度的复杂度。
+- **实现原理**：底层依赖全新的调度器、上下文通道、Server Components 协议和流式渲染机制，带来更高性能和更好开发体验。
+
+如需某一场景的源码级分析或迁移建议，可进一步说明！
+
+---
+
+## 9. 参考资料
+
+- [React 19 官方文档](https://react.dev/)
+- [React 19 新特性解读（GFG）](https://www.geeksforgeeks.org/react-19-new-features-and-updates/)
+- [React 19.1.0 更新说明](https://medium.com/@onix_react/whats-new-in-react-19-1-0-d87dda0905a9)
+- [React 19 深度解析](https://amireds.medium.com/not-using-react-19-yet-heres-what-youre-missing-478fa2008190)
+
+---
+
+如需更细致的某一特性源码分析、最佳实践或迁移建议，可随时补充说明！
+
+# React 19 新特性与升级亮点
+
+> 截至 2024 年 6 月，React 19 仍处于 RC（Release Candidate）阶段，以下内容基于官方发布说明与社区总结。
+
+## 1. 新的 useOptimistic Hook
+- **作用**：用于实现乐观 UI 更新（Optimistic UI），即在异步操作完成前，先"假装"数据已更新，提升用户体验。
+- **用法示例**：
+  ```js
+  const [optimisticValue, setOptimisticValue] = useOptimistic(value);
+  // setOptimisticValue(newValue) 可立即让 UI 反映新值，异步完成后自动同步
+  ```
+- **典型场景**：表单提交、点赞、评论等需要"秒回显"的场景。
+
+## 2. useFormStatus/useFormState（表单新特性）
+- **作用**：配合 React Server Actions，简化表单状态管理。
+- **优势**：可直接获取表单提交状态、错误、pending 等，无需手写繁琐逻辑。
+- **用法示例**：
+  ```js
+  import { useFormStatus } from 'react-dom';
+  function SubmitButton() {
+    const { pending } = useFormStatus();
+    return <button disabled={pending}>提交</button>;
+  }
+  ```
+
+## 3. Actions（Server Actions）
+- **作用**：支持直接在服务端定义和调用异步操作（如数据库写入、鉴权等），前端可直接调用。
+- **优势**：极大简化前后端通信，提升安全性和开发效率。
+- **用法示例**：
+  ```js
+  'use server';
+  export async function createPost(data) {
+    // 直接在服务端操作数据库
+  }
+  ```
+
+## 4. 新的 use事件（useEvent）
+- **作用**：提供稳定的事件回调引用，避免因闭包导致的性能问题。
+- **优势**：无需 useCallback，事件处理函数始终稳定。
+- **用法示例**：
+  ```js
+  import { useEvent } from 'react';
+  const handleClick = useEvent(() => { ... });
+  ```
+
+## 5. 新的 Suspense SSR 行为
+- **改进**：Suspense fallback 现在在 SSR 时会被自动流式输出，提升首屏体验。
+
+## 6. 新的文档与警告提示
+- **更好的开发体验**：错误提示、警告、文档全面升级。
+
+## 7. 其他改进
+- 更好的 TypeScript 支持。
+- React Server Components 继续完善。
+- 性能优化、包体积减小。
+
+---
+
+## 8. 与 React 18 及以前的优点对比
+- **开发体验更好**：表单、事件、乐观 UI 等场景更简单。
+- **性能更优**：SSR、Suspense、Server Actions 等提升大规模应用性能。
+- **更强的服务端能力**：Server Actions、RSC 让前后端一体化开发更高效。
+
+---
+
+## 9. 参考资料
+- [React 19 官方发布说明](https://react.dev/blog/2024/04/25/react-v19-rc)
+- [React 19 新特性解读](https://react.dev/learn/upgrading-to-react-19)

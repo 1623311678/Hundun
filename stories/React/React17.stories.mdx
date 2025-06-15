@@ -1,0 +1,352 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/React/React17" />
+
+# React 17 新特性与升级亮点
+
+## 1. 新特性与行为变更
+
+### 1.1 无破坏性升级（No New Features）
+- React 17 主要是"无新特性"的升级，核心目标是为未来大版本升级（如 18 并发特性）打基础。
+- 重点在于行为变更、兼容性提升和架构优化。
+
+### 1.2 新的事件委托机制
+- 事件监听从 document 绑定下移到根容器（root container），提升微前端、多个 React 应用共存场景的兼容性。
+- 支持多个 React 应用同时挂载在同一页面，事件不会冲突。
+
+### 1.3 事件冒泡行为变更
+- React 17 事件冒泡顺序更接近原生 DOM。
+- 捕获/冒泡阶段的行为与原生一致，便于与第三方库集成。
+
+### 1.4 支持逐步升级
+- 可以在同一页面同时运行 React 17 和更早版本（如 16），便于大型项目渐进式升级。
+
+### 1.5 新的 JSX 转换（可选）
+- 支持新版 JSX 转换（无需显式引入 React），但不是 React 17 必须项。
+- 需配合新版 Babel/TypeScript。
+
+### 1.6 更好的错误边界
+- 改进了 error boundary 行为，部分生命周期钩子（如 getDerivedStateFromError）在更广泛场景下生效。
+
+---
+
+## 2. 兼容性与最佳实践
+
+- 推荐先升级到 React 17，再平滑迁移到 React 18。
+- 升级时关注事件委托、第三方库兼容性。
+- 利用逐步升级能力，分模块、分页面迁移。
+
+---
+
+## 3. 参考资料
+- [React 17 官方发布说明](https://react.dev/blog/2020/10/20/react-v17.html)
+- [React 17 升级指南](https://react.dev/blog/2020/08/10/react-v17-rc.html)
+
+---
+
+## 4. React 17 新特性与行为变更的细节对比
+
+### 4.1 事件委托机制的变化
+- **React 16 及以前**：所有 React 事件统一绑定在 `document` 上（事件委托），导致多个 React 应用共存时事件冲突，微前端场景下不友好。
+- **React 17**：事件监听绑定在各自的根容器（root container）上。这样多个 React 应用可以安全共存，互不干扰。
+- **影响**：
+  - 微前端、嵌套多 React 应用时，事件不会串扰。
+  - 事件解绑更彻底，卸载 React 应用时不会影响全局。
+
+### 4.2 事件冒泡与捕获行为
+- **React 16 及以前**：React 的事件冒泡和捕获顺序与原生 DOM 有差异，部分第三方库集成时会有兼容性问题。
+- **React 17**：事件冒泡、捕获顺序与原生 DOM 完全一致。
+- **影响**：
+  - 可以更好地与原生事件、第三方库（如 jQuery、D3）混用。
+  - 事件处理的可预测性更高。
+
+### 4.3 支持逐步升级（渐进式升级）
+- **React 16 及以前**：同一页面只能挂载一个 React 版本，升级大项目困难。
+- **React 17**：同一页面可同时运行 React 17 和更早版本（如 16），通过 `ReactDOM.createRoot`/`ReactDOM.render` 分别挂载。
+- **影响**：
+  - 大型项目可分模块、分页面逐步迁移到新版本。
+  - 降低升级风险。
+
+### 4.4 新的 JSX 转换（可选）
+- **React 16 及以前**：JSX 语法必须显式 `import React from 'react'`，否则编译报错。
+- **React 17**：支持新版 JSX 转换（需 Babel 7.9+/TypeScript 4.1+），无需显式引入 React。
+- **影响**：
+  - 代码更简洁，减少无用 import。
+  - 但不是 React 17 必须项，需配合新工具链。
+
+### 4.5 错误边界行为改进
+- **React 16**：错误边界（Error Boundary）只能捕获子组件渲染、生命周期、构造函数中的错误。
+- **React 17**：改进了 error boundary 行为，`getDerivedStateFromError` 等生命周期在更多场景下生效。
+- **影响**：
+  - 错误捕获更健壮，边界更清晰。
+
+### 4.6 其他细节
+- **移除事件池（Event Pooling）**：React 17 移除了 SyntheticEvent 的事件池，事件对象可异步访问，无需调用 `event.persist()`。
+- **兼容性提升**：如对 IE11、Safari 的兼容性修复。
+- **更好的开发警告和错误提示**。
+
+---
+
+## 5. React 事件委托机制的详细原理与流程对比
+
+### 5.1 原生 DOM 事件
+- 在原生 DOM 中，事件监听器可以直接绑定在任意元素上，事件会从目标元素冒泡到 document。
+
+### 5.2 React 的事件委托机制
+
+#### React 16 及以前
+- React 并不是把 onClick 直接绑定在元素上，而是把所有事件统一绑定在 document 上。
+- 当你点击元素时，事件冒泡到 document，React 在 document 上捕获事件，通过 event.target 找到对应的 React 组件，执行 onClick。
+- 优点：只需在 document 上注册一次事件监听，性能好，兼容性强。
+
+#### React 17
+- React 17 把事件监听从 document 下移到了每个 React 应用的根容器（如 #root）上。
+- 事件冒泡到根容器时，React 才处理事件，之后的流程和以前一样。
+- 优点：每个 React 应用的事件只在自己的根容器上监听，多个 React 应用不会互相影响，方便卸载和隔离。
+
+### 5.3 具体流程对比
+
+| 步骤 | React 16 及以前                | React 17                      |
+|------|--------------------------------|-------------------------------|
+| 1    | 点击元素                       | 点击元素                      |
+| 2    | 事件冒泡到 document            | 事件冒泡到根容器（如 #root）  |
+| 3    | React 在 document 上捕获事件    | React 在根容器上捕获事件      |
+| 4    | 找到 event.target，执行 onClick | 找到 event.target，执行 onClick |
+
+### 5.4 为什么要这样做？
+- 事件委托是为了性能和一致性，避免每个元素都单独绑定事件。
+- React 17 的变化让每个 React 应用的事件只在自己的根容器上监听，多个 React 应用不会互相影响，方便卸载和隔离。
+
+### 5.5 直观例子
+
+```html
+<div id="root1"></div>
+<div id="root2"></div>
+```
+
+```js
+ReactDOM.render(<App1 />, document.getElementById('root1'));
+ReactDOM.render(<App2 />, document.getElementById('root2'));
+```
+- React 16-：两个应用的事件都绑定在 document 上，事件处理逻辑混在一起。
+- React 17+：App1 的事件只绑定在 #root1，App2 的事件只绑定在 #root2，互不干扰。
+
+### 5.6 总结
+- 你写的 onClick 依然是"点谁谁触发"，但 React 内部是通过"事件委托"机制，在根容器（React 17）或 document（React 16-）上统一监听和分发事件。
+- 这种机制对业务代码无感知，但对多应用隔离、微前端、事件解绑有重大意义。
+
+---
+
+## 6. React 17 事件冒泡行为变更的详细解释
+
+### 6.1 变更背景
+- React 16 及以前，React 的合成事件系统导致 React 事件和原生 DOM 事件的触发顺序不一致。
+- React 17 调整后，React 事件的捕获/冒泡顺序与原生 DOM 完全一致。
+
+### 6.2 具体例子
+
+```jsx
+<div
+  onClick={() => console.log('React onClick')}
+  ref={el => {
+    if (el) {
+      el.addEventListener('click', () => console.log('Native click'));
+    }
+  }}
+>
+  Click me
+</div>
+```
+
+- **React 16-**：点击时，先输出 `React onClick`，再输出 `Native click`（React 事件总是先于原生事件）。
+- **React 17+**：点击时，先输出 `Native click`，再输出 `React onClick`（与原生 DOM 一致，原生事件先于 React 事件）。
+
+### 6.3 捕获/冒泡阶段说明
+- **捕获阶段**：事件从 document 向目标元素传递，先触发捕获监听器（如 `addEventListener('click', fn, true)`）。
+- **冒泡阶段**：事件从目标元素向上冒泡到 document，依次触发冒泡监听器。
+- **React 17**：React 的事件监听器会在正确的阶段（捕获/冒泡）被触发，顺序与原生 DOM 完全一致。
+
+### 6.4 为什么这样做？
+- 与第三方库（如 jQuery、D3、原生 JS）集成时，事件顺序不会错乱。
+- 行为更可预测，开发者可以准确预期事件触发顺序。
+
+### 6.5 总结
+- **React 17 之前**：React 事件总是先于原生事件触发，顺序不一致。
+- **React 17 之后**：React 事件与原生事件的捕获/冒泡顺序完全一致，兼容性和可预测性大幅提升。
+
+---
+
+## 7. 原生 DOM 事件流顺序与 React 17 的一致性
+
+### 7.1 原生 DOM 事件流顺序
+
+原生 DOM 事件流分为三个阶段：
+
+1. **捕获阶段（Capture Phase）**
+   - 事件从 window → document → 外层父节点 ... 一直传递到目标元素（target）。
+   - 只有用 `addEventListener('click', fn, true)` 注册的捕获监听器会在这个阶段被触发。
+2. **目标阶段（Target Phase）**
+   - 事件到达目标元素本身。
+   - 目标元素上既会触发捕获监听器，也会触发冒泡监听器。
+3. **冒泡阶段（Bubble Phase）**
+   - 事件从目标元素向上，依次冒泡回父节点 → document → window。
+   - 只有用 `addEventListener('click', fn, false)`（或省略第三个参数）注册的监听器会在这个阶段被触发。
+
+#### 顺序举例
+
+```html
+<div id="outer">
+  <button id="btn">Click me</button>
+</div>
+```
+
+```js
+document.getElementById('outer').addEventListener('click', () => console.log('outer capture'), true); // 捕获
+document.getElementById('outer').addEventListener('click', () => console.log('outer bubble')); // 冒泡
+document.getElementById('btn').addEventListener('click', () => console.log('btn capture'), true); // 捕获
+document.getElementById('btn').addEventListener('click', () => console.log('btn bubble')); // 冒泡
+```
+
+点击 button，输出顺序：
+```
+outer capture   // 捕获阶段
+btn capture     // 捕获阶段
+btn bubble      // 冒泡阶段
+outer bubble    // 冒泡阶段
+```
+
+---
+
+### 7.2 React 17 的行为
+
+- **React 17 之前**：React 的合成事件系统有时会让 React 事件先于原生事件触发，顺序不完全一致。
+- **React 17**：React 的事件监听器会在捕获/冒泡阶段被正确触发，顺序与原生 DOM 完全一致。
+
+#### 例子
+
+```jsx
+<div
+  onClickCapture={() => console.log('React capture')}
+  onClick={() => console.log('React bubble')}
+  ref={el => {
+    if (el) {
+      el.addEventListener('click', () => console.log('Native bubble'));
+      el.addEventListener('click', () => console.log('Native capture'), true);
+    }
+  }}
+>
+  Click me
+</div>
+```
+
+点击时输出顺序（React 17+）：
+```
+Native capture   // 捕获阶段
+React capture    // 捕获阶段
+React bubble     // 冒泡阶段
+Native bubble    // 冒泡阶段
+```
+- React 事件和原生事件都严格遵循 DOM 事件流顺序。
+
+---
+
+### 7.3 总结
+- **原生 DOM 顺序**：捕获 → 目标 → 冒泡。
+- **React 17**：React 事件监听器会在捕获/冒泡阶段被正确触发，顺序与原生 DOM 完全一致。
+- 这样可以无缝与原生事件、第三方库事件混用，事件顺序可预测、无冲突。
+
+---
+
+## 8. 事件流顺序：先捕获，后冒泡
+
+### 8.1 事件流的三个阶段
+
+1. **捕获阶段（Capture Phase）**
+   - 事件从 window → document → 外层父节点 ... 一直传递到目标元素（target）。
+   - 只有用 `addEventListener('click', fn, true)` 注册的捕获监听器会在这个阶段被触发。
+2. **目标阶段（Target Phase）**
+   - 事件到达目标元素本身。
+   - 目标元素上既会触发捕获监听器，也会触发冒泡监听器。
+3. **冒泡阶段（Bubble Phase）**
+   - 事件从目标元素向上，依次冒泡回父节点 → document → window。
+   - 只有用 `addEventListener('click', fn, false)`（或省略第三个参数）注册的监听器会在这个阶段被触发。
+
+### 8.2 顺序举例
+
+```html
+<div id="outer">
+  <button id="btn">Click me</button>
+</div>
+```
+
+```js
+document.getElementById('outer').addEventListener('click', () => console.log('outer capture'), true); // 捕获
+document.getElementById('outer').addEventListener('click', () => console.log('outer bubble')); // 冒泡
+document.getElementById('btn').addEventListener('click', () => console.log('btn capture'), true); // 捕获
+document.getElementById('btn').addEventListener('click', () => console.log('btn bubble')); // 冒泡
+```
+
+点击 button，输出顺序：
+```
+outer capture   // 捕获阶段
+btn capture     // 捕获阶段
+btn bubble      // 冒泡阶段
+outer bubble    // 冒泡阶段
+```
+
+### 8.3 总结
+- **事件总是先捕获，后冒泡。**
+- 捕获阶段先于冒泡阶段，目标元素上两种监听器都能触发。
+
+---
+
+## 9. 事件监听器第三个参数 true/false 的顺序详解
+
+### 9.1 监听器参数说明
+- `true`：监听器在**捕获阶段**触发。
+- `false`（或省略）：监听器在**冒泡阶段**触发。
+
+### 9.2 顺序详细说明
+
+```js
+div.addEventListener('click', () => console.log('capture'), true);   // 捕获
+div.addEventListener('click', () => console.log('bubble'), false);   // 冒泡
+```
+点击 div，输出顺序：
+```
+capture   // 捕获阶段
+bubble    // 冒泡阶段
+```
+
+### 9.3 嵌套结构例子
+
+```html
+<div id="outer">
+  <div id="inner"></div>
+</div>
+```
+
+```js
+outer.addEventListener('click', () => console.log('outer capture'), true);
+outer.addEventListener('click', () => console.log('outer bubble'));
+inner.addEventListener('click', () => console.log('inner capture'), true);
+inner.addEventListener('click', () => console.log('inner bubble'));
+```
+点击 inner，输出顺序：
+```
+outer capture   // 捕获阶段
+inner capture   // 捕获阶段
+inner bubble    // 冒泡阶段
+outer bubble    // 冒泡阶段
+```
+
+### 9.4 目标元素上的监听器
+- 目标元素（如 inner）上，如果同时有捕获和冒泡监听器，先触发捕获监听器，再触发冒泡监听器。
+- 这就是第三个参数 true/false 决定的顺序差异。
+
+### 9.5 总结口诀
+- **true 捕获，false 冒泡，先捕获后冒泡。**
+- 目标元素上也是先捕获监听器，后冒泡监听器。
+
+---

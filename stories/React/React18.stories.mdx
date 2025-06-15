@@ -1,0 +1,563 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/React/React18" />
+
+# React 18 新特性与升级亮点
+
+## 1. 自动批处理（Automatic Batching）
+- **新特性**：自动批量处理更多场景下的 state 更新，包括 setTimeout、Promise、原生事件等。
+- **优点**：减少不必要的渲染次数，提升性能。
+- **示例**：
+  ```js
+  setTimeout(() => {
+    setA(1);
+    setB(2);
+    // React 18: 只触发一次渲染
+  });
+  ```
+
+## 2. 并发特性（Concurrent Features）
+- **新特性**：引入并发渲染能力（Concurrent Rendering），支持更细粒度的任务调度和中断。
+- **优点**：提升大列表、动画、交互等场景的流畅度。
+- **示例**：
+  ```js
+  import { createRoot } from 'react-dom/client';
+  const root = createRoot(document.getElementById('root'));
+  root.render(<App />); // 启用并发特性
+  ```
+
+## 3. startTransition API
+- **新特性**：`startTransition` 用于标记低优先级的 UI 更新（如大列表、搜索等）。
+- **优点**：高优先级任务（如输入）不会被低优先级任务阻塞，提升响应性。
+- **示例**：
+  ```js
+  import { startTransition } from 'react';
+  startTransition(() => {
+    setList(newList); // 低优先级批量更新
+  });
+  ```
+
+## 4. Suspense 改进与 SSR 支持
+- **新特性**：Suspense 现已支持服务端渲染（SSR）、数据流（如 React 18 的 streaming SSR）。
+- **优点**：更好地处理异步加载、骨架屏、流式渲染。
+- **示例**：
+  ```js
+  <Suspense fallback={<Loading />}>
+    <SomeAsyncComponent />
+  </Suspense>
+  ```
+
+## 5. useId Hook
+- **新特性**：`useId` 用于生成稳定、唯一的 ID，适合无障碍、表单 label 等场景。
+- **优点**：避免 SSR/CSR 不一致问题。
+- **示例**：
+  ```js
+  const id = useId();
+  <input id={id} />
+  <label htmlFor={id}>Label</label>
+  ```
+
+## 6. useSyncExternalStore
+- **新特性**：为外部状态管理（如 Redux、MobX）提供官方订阅方案，保证并发安全。
+- **优点**：更好地支持并发渲染下的外部状态同步。
+- **示例**：
+  ```js
+  const state = useSyncExternalStore(subscribe, getSnapshot);
+  ```
+
+## 7. useInsertionEffect
+- **新特性**：`useInsertionEffect` 用于在 DOM 插入前同步注入样式，适合 CSS-in-JS 场景。
+- **优点**：避免样式闪烁，提升体验。
+- **示例**：
+  ```js
+  useInsertionEffect(() => {
+    // 注入样式
+  }, []);
+  ```
+
+## 8. 其他改进
+- 更好的 SSR 支持（流式渲染、渐进式水合）。
+- React 18 默认启用严格模式下的双重渲染（开发环境）。
+- useDeferredValue、useTransition 等新 Hook。
+
+---
+
+## 9. 与 React 17 及以前的优点对比
+- **性能提升**：自动批处理、并发渲染减少不必要的渲染，提升大规模应用性能。
+- **用户体验更好**：startTransition、Suspense 等让交互更流畅，异步加载体验更佳。
+- **更强的 SSR 能力**：支持流式渲染、Suspense on SSR。
+- **更好的外部状态管理支持**：useSyncExternalStore 保证并发安全。
+- **更丰富的 Hook API**：如 useId、useInsertionEffect、useDeferredValue、useTransition。
+
+---
+
+## 10. 参考资料
+- [React 18 官方发布说明](https://react.dev/blog/2022/03/29/react-v18.html)
+- [React 18 新特性详解](https://react.dev/learn/upgrading-to-react-18)
+
+---
+
+## 11. 自动批处理（Automatic Batching）详解
+
+### 11.1 什么是自动批处理？
+- 自动批处理指：在同一个事件循环（event loop）内，React 会自动把多次 state 更新（setState/useState）合并成一次渲染和 DOM 更新，减少渲染次数、提升性能。
+
+### 11.2 React 17 及以前的行为
+- 只有在 React 合成事件、生命周期函数、钩子（如 useEffect）中，setState 才会被批量合并。
+- 在 setTimeout、Promise.then、原生事件等异步场景下，每次 setState 都会单独触发一次渲染。
+
+**例子：**
+```js
+setTimeout(() => {
+  setA(1);
+  setB(2);
+  // React 17: 会触发两次渲染
+});
+```
+
+### 11.3 React 18 的行为
+- 自动批处理扩展到几乎所有场景，包括 setTimeout、Promise.then、原生事件等。
+- 只要多次 setState 发生在同一个事件循环内，React 18 都会自动合并，只触发一次渲染。
+
+**例子：**
+```js
+setTimeout(() => {
+  setA(1);
+  setB(2);
+  // React 18: 只触发一次渲染
+});
+```
+
+### 11.4 自动批处理的好处
+- 减少不必要的渲染次数，提升性能。
+- 代码更简洁，无需手动调用 `unstable_batchedUpdates`。
+- 行为更一致，开发者不用关心 setState 发生在哪个上下文。
+
+### 11.5 代码对比
+
+**React 17 及以前**
+```js
+setTimeout(() => {
+  setA(1); // 触发一次渲染
+  setB(2); // 再触发一次渲染
+});
+```
+
+**React 18**
+```js
+setTimeout(() => {
+  setA(1);
+  setB(2);
+  // 只触发一次渲染
+});
+```
+
+### 11.6 手动批处理（兼容旧场景）
+如果你需要在特殊场景下手动批处理（如第三方回调），可以用：
+```js
+import { unstable_batchedUpdates } from 'react-dom';
+unstable_batchedUpdates(() => {
+  setA(1);
+  setB(2);
+});
+```
+
+### 11.7 总结
+- 自动批处理让 React 18 在更多场景下自动合并 state 更新，减少渲染次数，提升性能。
+- 让开发者不用再关心 setState 的上下文，代码更健壮、性能更优。
+
+---
+
+## 12. 并发特性（Concurrent Features）原理、实现与优势
+
+### 12.1 并发特性是什么？
+- React 能同时准备多个 UI 状态，根据优先级、用户交互等动态决定何时、以什么顺序渲染和提交这些状态。
+- 支持"可中断、可恢复、可插队"地渲染 UI，而不是"一口气渲染到底"。
+
+### 12.2 实现原理
+
+#### Fiber 架构
+- Fiber 允许将渲染任务拆分为小单元（Fiber 节点），每次只处理一部分。
+- 渲染过程中可以让出主线程，响应更高优先级任务。
+
+#### Scheduler 调度器
+- 内部 Scheduler 负责分配任务优先级、时间切片、任务中断与恢复。
+- 根据 Lane 优先级动态调度，高优先级任务优先执行。
+
+#### 并发渲染入口
+- 通过 `createRoot` API 启用并发特性：
+  ```js
+  import { createRoot } from 'react-dom/client';
+  const root = createRoot(document.getElementById('root'));
+  root.render(<App />);
+  ```
+
+#### 可中断、可恢复
+- 渲染过程中如有高优先级任务到来（如用户输入），React 可中断当前渲染，先处理高优先级任务，之后再恢复低优先级任务。
+- 这就是"时间切片（Time Slicing）"的核心。
+
+### 12.3 优势
+- **不卡顿**：大列表、复杂页面渲染时，用户输入、动画等高优先级任务不会被阻塞，页面更流畅。
+- **响应更快**：React 可以优先响应用户操作，延后不重要的渲染。
+- **更灵活的 UI 更新**：支持 `startTransition`、`useTransition` 等 API，将低优先级任务标记为"可延后"。
+- **更强的可扩展性**：为未来的 React 新特性（如 Server Components、Streaming SSR）打下基础。
+
+### 12.4 代码示例
+
+```js
+import { startTransition } from 'react';
+
+function handleInputChange(e) {
+  const value = e.target.value;
+  // 高优先级：立即响应输入
+  setInputValue(value);
+  // 低优先级：大列表过滤
+  startTransition(() => {
+    setFilteredList(filterList(value));
+  });
+}
+```
+
+### 12.5 为什么 React 17 没有并发渲染？
+- **React 16** 虽然引入了 Fiber 架构，但默认仍是"同步渲染模式"，即使有 Fiber 也没有开放并发调度入口。
+- **React 17** 依然没有对外暴露并发渲染能力，所有渲染流程仍是同步、不可中断的。
+- **React 18** 才通过 `createRoot`、`startTransition` 等 API 正式开放并发渲染入口，配合底层 Fiber + Scheduler 实现真正的"可中断、可恢复、可插队"的并发渲染。
+- 这是 React 18 的重大升级点，也是与 17 及以前版本的本质区别。
+
+---
+
+## 13. startTransition 与 useTransition 详解
+
+### 13.1 startTransition
+
+- **作用**：用于将一组 state 更新标记为"可延后、低优先级"的并发任务。
+- **典型场景**：如大列表过滤、搜索、异步数据加载等，避免阻塞高优先级任务（如输入响应）。
+- **原理**：startTransition 内的更新会被 React 视为"可中断、可延后"，高优先级任务（如输入、点击）可随时插队。
+
+**用法示例：**
+```js
+import { startTransition } from 'react';
+
+function handleInputChange(e) {
+  const value = e.target.value;
+  setInputValue(value); // 高优先级，立即响应输入
+  startTransition(() => {
+    setFilteredList(filterList(value)); // 低优先级，异步批量更新
+  });
+}
+```
+- 这样用户输入不会被大列表渲染卡住，体验更流畅。
+
+### 13.2 useTransition
+
+- **作用**：提供一个"并发状态"标记和 startTransition 的简化用法。
+- **返回值**：`const [isPending, startTransition] = useTransition();`
+  - `isPending`：表示当前是否有 transition 任务在进行（可用于 loading 状态）。
+  - `startTransition`：与上面 API 一致。
+- **典型场景**：表单输入、搜索、分页、切换大视图等。
+
+**用法示例：**
+```js
+import { useState, useTransition } from 'react';
+
+function SearchComponent() {
+  const [input, setInput] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+
+  function handleChange(e) {
+    const value = e.target.value;
+    setInput(value); // 高优先级
+    startTransition(() => {
+      setResults(expensiveFilter(value)); // 低优先级
+    });
+  }
+
+  return (
+    <div>
+      <input value={input} onChange={handleChange} />
+      {isPending && <span>Loading...</span>}
+      <ul>
+        {results.map(r => <li key={r}>{r}</li>)}
+      </ul>
+    </div>
+  );
+}
+```
+
+### 13.3 注意事项
+- startTransition/useTransition 只影响其内部的 state 更新优先级，不影响外部更新。
+- 适合"可以延迟但不能丢失"的 UI 更新，不适合关键交互（如输入值本身、按钮点击等）。
+- isPending 只在 transition 任务未提交时为 true，可用于 loading 提示。
+
+### 13.4 总结
+- **startTransition**：用于标记一组低优先级、可延后的 UI 更新。
+- **useTransition**：提供 isPending 状态和 startTransition 方法，便于管理并发任务和 loading 状态。
+- 让 React 应用在大数据量、复杂交互场景下依然保持流畅体验。
+
+---
+
+## 14. Next.js 及传统 SSR 如何保证 id 一致性？为什么很多时候"也没问题"？
+
+### 14.1 传统做法：手动保证一致性
+- SSR 框架（如 Next.js）在 React 18 之前，不会自动为你生成稳定 id，开发者通常：
+  - 用业务 id（如 item.id）作为 DOM id。
+  - 用 map 的索引（index）生成 id（小范围、无动态增删时）。
+  - 在组件外部（模块作用域）生成 id，保证 SSR/CSR 渲染顺序一致。
+
+**示例：**
+```jsx
+<input id={`input-${item.id}`} />
+<input id={`input-${index}`} />
+```
+
+### 14.2 为什么很多时候"也没问题"？
+- 只要 SSR 和 CSR 渲染顺序、数据完全一致，生成 id 的逻辑也一致，就不会有 hydration 警告。
+- 但如果有异步加载、懒加载、条件渲染、动态插入等，SSR/CSR 渲染树顺序不一致，就可能出现 id 不一致、hydration 警告或 UI 闪烁。
+
+### 14.3 典型问题场景
+- 动态列表、懒加载组件、条件渲染：SSR/CSR 渲染数量或顺序不一致，id 就会错位。
+- 多实例组件：组件树结构变化，SSR/CSR 的 id 生成顺序就会不一致。
+
+### 14.4 useId 的优势
+- 自动保证一致性：无论组件树怎么变、怎么嵌套，React 18 的 useId 都能保证 SSR/CSR 渲染出来的 id 一致。
+- 无需手动管理：开发者不用再手动维护 id 生成逻辑，避免出错。
+
+### 14.5 总结
+- Next.js 之前"没问题"是因为数据和渲染顺序刚好一致，或者用业务 id。
+- 但在复杂场景下，传统做法容易出错，React 18 的 useId 彻底解决了 SSR/CSR id 不一致的问题，提升了健壮性和开发体验。
+
+---
+
+## 15. useSyncExternalStore 的底层实现原理、与 useEffect 区别及更多实际案例
+
+### 15.1 底层实现原理
+- React 18 并发渲染下，组件可能会被"暂停/恢复/回滚"，如果用 useEffect 订阅外部 store，可能导致 UI 和 store 状态不一致（撕裂）。
+- useSyncExternalStore 的核心：
+  - **渲染时同步读取快照**（getSnapshot），保证渲染用到的外部数据和 UI 一致。
+  - **订阅变更**（subscribe），当外部 store 变化时，自动触发组件重新渲染。
+  - **在 commit 阶段再次校验快照**，如果快照和渲染时不一致，会重新渲染，保证一致性。
+- 这样即使在并发模式下，UI 和外部 store 始终保持同步，不会出现"撕裂"。
+
+### 15.2 与 useEffect 的区别
+- useEffect 订阅外部 store 时，渲染和订阅是异步的，可能出现：
+  - 渲染时读到旧值，提交时 store 已变，导致 UI 和数据不一致。
+  - 并发模式下，组件可能被多次渲染/回滚，useEffect 订阅时机不准确。
+- useSyncExternalStore 在渲染时同步读取快照，订阅和快照校验都在 React 内部调度，**保证并发安全**。
+- **结论**：并发模式下，订阅外部 store 必须用 useSyncExternalStore，不能用 useEffect+useState。
+
+### 15.3 更多实际案例
+
+#### 1. 订阅 Redux store
+```js
+import { useSyncExternalStore } from 'react';
+import { store } from './store';
+
+function subscribe(callback) {
+  return store.subscribe(callback);
+}
+function getSnapshot() {
+  return store.getState();
+}
+function MyReduxComponent() {
+  const state = useSyncExternalStore(subscribe, getSnapshot);
+  return <div>{state.value}</div>;
+}
+```
+
+#### 2. 订阅浏览器窗口尺寸
+```js
+function subscribe(callback) {
+  window.addEventListener('resize', callback);
+  return () => window.removeEventListener('resize', callback);
+}
+function getSnapshot() {
+  return window.innerWidth;
+}
+function WindowWidth() {
+  const width = useSyncExternalStore(subscribe, getSnapshot);
+  return <div>窗口宽度：{width}</div>;
+}
+```
+
+#### 3. 订阅 localStorage 变化
+```js
+function subscribe(callback) {
+  window.addEventListener('storage', callback);
+  return () => window.removeEventListener('storage', callback);
+}
+function getSnapshot() {
+  return localStorage.getItem('myKey');
+}
+function LocalStorageValue() {
+  const value = useSyncExternalStore(subscribe, getSnapshot);
+  return <div>localStorage: {value}</div>;
+}
+```
+
+### 15.4 总结
+- useSyncExternalStore 通过同步快照和订阅机制，保证并发渲染下 UI 和外部数据一致。
+- 是 React 18 并发模式下外部状态管理的最佳实践，优于 useEffect+useState。
+
+---
+
+## 16. useLayoutEffect 的理解与新老常用 Hooks 总览
+
+### 16.1 useLayoutEffect 怎么理解？
+- `useLayoutEffect` 是 React 的一个副作用 Hook，和 `useEffect` 类似，但**它的回调会在 DOM 更新后、浏览器绘制前同步执行**。
+- 适合需要**同步读取布局、测量 DOM、强制同步修改 DOM**的场景。
+- 如果副作用只涉及数据、异步请求、订阅等，优先用 `useEffect`，只有涉及 DOM 读写、布局测量时才用 `useLayoutEffect`。
+
+**执行时机对比：**
+- `useEffect`：DOM 更新后，浏览器绘制后（异步）。
+- `useLayoutEffect`：DOM 更新后，浏览器绘制前（同步）。
+
+**典型场景：**
+- 需要测量 DOM 尺寸、位置（如获取 offsetWidth、getBoundingClientRect）。
+- 需要同步修改 DOM 样式，防止闪烁。
+- 需要和第三方 DOM 库（如 D3、jQuery）集成。
+
+**示例：**
+```js
+import { useLayoutEffect, useRef } from 'react';
+function MyComponent() {
+  const ref = useRef();
+  useLayoutEffect(() => {
+    const width = ref.current.offsetWidth;
+    // 立即同步操作 DOM
+  }, []);
+  return <div ref={ref}>内容</div>;
+}
+```
+
+### 16.2 React 18 及以前所有新老常用 Hooks 总览
+
+| Hook                    | 说明                                                         |
+|------------------------|--------------------------------------------------------------|
+| useState               | 组件状态管理                                                 |
+| useEffect              | 副作用处理（异步，DOM 更新后执行）                           |
+| useLayoutEffect        | 同步副作用（DOM 更新后、绘制前执行）                         |
+| useRef                 | 获取/存储 DOM 或任意可变值                                   |
+| useContext             | 读取 React 上下文                                            |
+| useReducer             | 复杂状态管理（类似 Redux reducer）                           |
+| useCallback            | 缓存函数引用，避免不必要的子组件渲染                         |
+| useMemo                | 缓存计算结果，避免重复计算                                   |
+| useImperativeHandle    | 暴露自定义 ref 给父组件                                       |
+| useDebugValue          | 自定义 Hook 调试信息                                         |
+| useId (React 18)       | 生成稳定唯一 id，适合 SSR/CSR 场景                           |
+| useTransition (18)     | 并发特性，标记低优先级 UI 更新，返回 isPending 状态          |
+| useDeferredValue (18)  | 并发特性，延迟渲染低优先级值                                 |
+| useSyncExternalStore(18)| 并发安全订阅外部 store，适合 Redux/MobX 等                  |
+| useInsertionEffect (18)| 在 DOM 插入前同步注入样式，适合 CSS-in-JS                   |
+
+---
+
+## 17. useTransition 与 useDeferredValue 的实现原理与区别
+
+### 17.1 useTransition 实现原理
+- 本质是利用 React 并发调度（Fiber + Scheduler），将 startTransition 包裹的 state 更新标记为"Transition Lane"（低优先级）。
+- 当调用 startTransition 时，内部会：
+  - 将回调内的 setState/update 操作分配到 transition 车道（Lane），优先级低于用户输入、点击等高优先级任务。
+  - 如果有高优先级任务到来，transition 任务会被中断，等主线程空闲时再恢复。
+  - isPending 状态由调度器根据 transition 任务是否完成自动维护。
+- 这样可以保证主交互（如输入）流畅，低优先级任务不会阻塞高优先级任务。
+
+### 17.2 useDeferredValue 实现原理
+- 本质是将传入的值（如 input、props）在内部用 transition 车道（Lane）延迟更新。
+- 当主 UI 更新后，deferredValue 会在主线程空闲时再同步到最新值。
+- React 内部会比较当前值和 deferredValue，如果不同，则在低优先级任务中更新 deferredValue。
+- 适合 prop 传递、单值场景的延迟渲染。
+
+### 17.3 区别与适用场景
+| 对比项           | useTransition                        | useDeferredValue                  |
+|------------------|--------------------------------------|-----------------------------------|
+| 作用             | 标记一组 state 更新为低优先级         | 延迟某个"值"的渲染                |
+| 用法             | 返回 isPending 和 startTransition     | 返回延迟后的值                    |
+| 适用场景         | 需要批量延后一组更新                  | 只需延后某个 prop/值的渲染         |
+| 控制粒度         | 代码块级别（startTransition 包裹）    | 值级别（deferredValue）           |
+| loading 状态     | 有 isPending 可用                     | 没有 isPending，需自行判断         |
+
+### 17.4 总结
+- **useTransition**：通过 startTransition 包裹一组低优先级更新，适合复杂交互、批量延后。
+- **useDeferredValue**：延迟某个值的渲染，适合 prop 传递、单值场景。
+- 两者底层都依赖 React 18 的并发调度和 Lane 优先级机制。
+
+---
+
+## 18. 更好的 SSR 支持（流式渲染、渐进式水合）详解
+
+### 18.1 传统 SSR 的问题
+- 传统 SSR：服务端一次性渲染完整 HTML，客户端再整体"水合"（hydrate）成可交互的 React 应用。
+- 问题：
+  - 用户必须等所有数据和 HTML 渲染完，页面才能显示，首屏时间长。
+  - 页面大、数据多时，白屏时间明显。
+  - 水合过程是"全量同步"，大页面会卡顿。
+
+### 18.2 React 18 的流式渲染（Streaming SSR）
+- 原理：服务端将 HTML 以"流"的方式一块块发送到浏览器，边生成边发送，浏览器边收到边渲染。
+- 优势：
+  - 用户能更快看到页面内容（首屏更快）。
+  - 后端可以优先渲染关键内容，次要内容后续补充。
+  - 支持 Suspense，异步数据加载时可优雅降级。
+- 关键 API：`renderToPipeableStream`（Node.js）、`renderToReadableStream`（Web Streams API）。
+
+**Node.js 流式 SSR 示例：**
+```js
+import { renderToPipeableStream } from 'react-dom/server';
+import express from 'express';
+import App from './App';
+
+const app = express();
+
+app.get('*', (req, res) => {
+  const { pipe } = renderToPipeableStream(<App />, {
+    onShellReady() {
+      res.setHeader('content-type', 'text/html');
+      pipe(res); // 直接把 HTML 流写入响应
+    },
+    onError(err) {
+      res.status(500).send('Server Error');
+    }
+  });
+});
+```
+
+### 18.3 渐进式水合（Progressive/Selective Hydration）
+- 原理：不是一次性让整个页面变为可交互，而是按需、分块地水合。
+- 浏览器优先水合用户可见、关键区域，其他区域等用户滚动到、交互时再水合。
+- 支持 Suspense，异步组件/数据加载完再水合对应区域。
+- 优势：
+  - 首屏可交互更快，减少主线程阻塞。
+  - 大页面、复杂页面水合更平滑，用户体验更好。
+  - 支持"Skeleton + 真正内容"渐进替换。
+
+**Suspense + 流式 SSR + 渐进水合示例：**
+```jsx
+import { Suspense } from 'react';
+
+function Page() {
+  return (
+    <div>
+      <Header />
+      <Suspense fallback={<SkeletonList />}>
+        <AsyncList />
+      </Suspense>
+      <Footer />
+    </div>
+  );
+}
+```
+- Header/Footer 会先渲染和水合，AsyncList 等数据准备好后再渲染和水合。
+
+### 18.4 关键原理与机制
+- 流式渲染：服务端边生成边发送 HTML，浏览器边收到边渲染。
+- Suspense on SSR：支持异步数据/组件的占位和流式补全。
+- 渐进式水合：客户端按需、分块地让页面变为可交互，优先关键区域。
+
+### 18.5 总结
+- React 18 的流式渲染和渐进式水合极大提升了 SSR 首屏速度和大页面体验。
+- 支持 Suspense、异步数据、Skeleton 等现代 Web 体验。
+- 让 SSR 页面"秒开可见、逐步可交互"，是企业级 Web 性能优化的利器。
+
+---
