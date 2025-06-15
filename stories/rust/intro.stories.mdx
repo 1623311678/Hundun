@@ -1,0 +1,61 @@
+/* @source cursor @line_count 100  @branch feat/xxx*/
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/rust/介绍" />
+
+# Rust 语言详解与生态工具
+
+---
+
+## 1. 什么是 Rust？
+- Rust 是由 Mozilla 主导开发的系统级编程语言，主打"安全、并发、性能"。
+- 最大特点：内存安全（无 GC）、零成本抽象、强类型、现代语法、极致性能。
+- 适合高性能服务端、嵌入式、区块链、WebAssembly、桌面端等场景。
+- 口号：Fearless Concurrency（无畏并发）、Memory Safety（内存安全）。
+
+### 1.1 Rust 语言特性
+- 所有权/借用/生命周期，彻底杜绝野指针、内存泄漏。
+- 零成本抽象，泛型/trait/模式匹配，表达力强。
+- 并发安全，线程/异步无数据竞争。
+- 丰富的包管理（Cargo）、文档、测试、构建工具链。
+- 跨平台，支持 Linux/macOS/Windows/嵌入式。
+
+---
+
+## 2. Rust 生态主流工具与框架
+| 工具/框架      | 领域         | 说明/典型应用                      |
+|----------------|--------------|------------------------------------|
+| Cargo          | 包管理/构建  | Rust 官方包管理/构建/依赖工具      |
+| Tokio          | 异步/网络    | 高性能异步运行时，服务端/微服务    |
+| Actix          | Web 框架     | 高性能 Web 框架，Actor 模型        |
+| Serde          | 序列化       | 高性能序列化/反序列化库            |
+| Tauri          | 桌面端       | Rust+Web 技术桌面应用，极致轻量    |
+| Wasm/Wasm-bindgen | WebAssembly | Rust 编译 WebAssembly，前端/后端   |
+| SWC            | 构建工具     | 高性能 JS/TS 编译器，Next.js/Parcel|
+| Deno           | 运行时       | 新一代 JS/TS 运行时，底层用 Rust   |
+| Turbopack      | 构建工具     | Next.js 新一代打包器，基于 Rust    |
+| esbuild        | 构建工具     | 超快 JS/TS 打包器，部分用 Rust     |
+| ripgrep        | 工具         | 超快文本搜索，VSCode 内置          |
+| Clippy         | 静态分析     | Rust 代码 Lint 工具                |
+| Rustfmt        | 格式化       | 官方代码格式化工具                 |
+| Hyper          | HTTP         | 高性能 HTTP 库                     |
+| Rocket         | Web 框架     | 现代 Web 框架                      |
+
+---
+
+## 3. Rust 对前端的影响
+- **高性能构建工具**：SWC、Turbopack、esbuild、Parcel 等主流前端构建工具大量用 Rust 重写，极大提升打包/编译速度。
+- **WebAssembly（Wasm）**：Rust 可直接编译为 Wasm，前端可用 Rust 写高性能模块（如图像处理、音视频、加密等），与 JS 无缝协作。
+- **桌面端开发**：Tauri 用 Rust+Web 技术打造极致轻量桌面应用，成为 Electron 替代方案。
+- **Node.js 替代/补充**：Deno、Bun 等新一代 JS 运行时底层用 Rust，安全性/性能更优。
+- **工具链现代化**：ripgrep、Clippy、Rustfmt 等工具被 VSCode、前端工程广泛集成。
+
+### 3.1 典型前端场景
+- Next.js 13+ 默认用 SWC/Turbopack（Rust）做编译/打包。
+- Vite/Parcel/esbuild 等均有 Rust 相关实现或插件。
+- Tauri 桌面端、Wasm 前端模块、Deno/Bun 运行时。
+
+---
+
+如需 Rust 生态源码分析、Wasm 实战、前端与 Rust 融合案例，欢迎继续提问！

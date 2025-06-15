@@ -2,3 +2,86 @@ import { Meta } from "@storybook/addon-docs";
 
 
 <Meta title="Hundun/React/React合成事件" />
+
+# React 合成事件详解与版本演进对比
+
+---
+
+## 1. React 合成事件是什么？
+
+- **定义**：React 合成事件（SyntheticEvent）是对原生 DOM 事件的封装，提供跨浏览器一致的事件对象和事件系统。
+- **机制**：React 在组件挂载时，会在根节点（如 document、container）注册统一的事件监听器，所有子组件事件都通过事件委托（event delegation）机制冒泡到根节点，由 React 统一分发。
+- **优势**：
+  - 跨浏览器兼容性好，API 一致。
+  - 性能优，减少事件监听器数量。
+  - 支持事件池（event pooling）、阻止默认、冒泡、捕获等。
+  - 可统一管理事件优先级、批量更新等。
+
+---
+
+## 2. 合成事件的底层原理
+
+- React 维护一个事件注册表，所有 onClick/onChange 等事件都注册到根节点。
+- 事件触发时，React 构造 SyntheticEvent 对象，模拟原生事件 API。
+- 事件冒泡/捕获、stopPropagation、preventDefault 等都由 React 控制。
+- 事件处理函数在 React 的批量更新机制下执行，保证 setState 等操作的高效。
+
+---
+
+## 3. 版本演进对比
+
+### React 15 及以前
+- 事件委托到 document，所有事件监听器都挂载在 document 上。
+- SyntheticEvent 对象有事件池（event pooling），事件回调后属性会被清空，需异步访问时调用 event.persist()。
+- 事件冒泡顺序与原生 DOM 不完全一致。
+
+### React 16
+- 事件委托仍在 document。
+- 支持异步渲染（Fiber 架构），但事件系统基本未变。
+- 事件池机制依然存在。
+
+### React 17
+- **重大变更：事件委托从 document 移到 React 根容器（container）**。
+- 支持多个 React 应用共存，事件不会全局污染。
+- 事件冒泡顺序与原生 DOM 完全一致。
+- 移除事件池（event pooling），SyntheticEvent 属性可安全异步访问。
+- 支持捕获/冒泡阶段监听，onClickCapture/onClick。
+- 支持原生事件监听与合成事件共存。
+
+### React 18
+- 事件委托机制与 17 保持一致。
+- 支持并发特性（Concurrent Mode），事件处理可被中断、优先级调度。
+- 批量更新机制更智能，自动合并 setState。
+- useEvent 等新 Hook 支持事件回调引用稳定。
+
+### React 19
+- 事件系统进一步与并发调度、优先级系统深度集成。
+- 支持 useEvent 等新 API，彻底解决闭包陷阱，事件回调始终稳定。
+- 事件系统更易扩展，支持自定义事件优先级、批量处理。
+- 事件捕获/冒泡、原生/合成事件协作更完善。
+
+---
+
+## 4. 典型代码示例
+
+```jsx
+function Demo() {
+  function handleClick(e) {
+    console.log(e.type); // SyntheticEvent
+    setTimeout(() => {
+      // React 17+ 可安全访问 e
+      console.log(e.target);
+    });
+  }
+  return <button onClick={handleClick}>Click</button>;
+}
+```
+
+---
+
+## 5. 总结
+- React 合成事件为跨浏览器、批量更新、性能优化和一致性提供了基础。
+- 17 之后事件委托更安全，事件池被移除，事件系统与并发调度深度融合。
+- 19 进一步提升事件回调稳定性和优先级控制。
+
+如需源码级分析或事件系统最佳实践，欢迎继续提问！

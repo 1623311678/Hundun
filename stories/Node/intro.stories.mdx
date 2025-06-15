@@ -1,0 +1,300 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/Node/介绍" />
+
+# Node.js 2025（v22 LTS）最新特性与趋势
+
+## Node.js 22（2024年4月 LTS）最新特性
+- **V8 引擎升级至 12.x**：支持更多 ES2024/ES2025 语法和性能提升。
+- **ESM 默认体验更完善**：无需 .js/.mjs 区分，import/export 更加无缝。
+- **WebSocket 原生支持**：无需第三方库即可使用 WebSocket。
+- **权限模型（Permission Model）正式版**：可限制文件、网络、子进程等访问权限。
+- **Test Runner 增强**：支持并发、快照测试、内置覆盖率统计。
+- **诊断报告与监控增强**：更易集成云监控、自动生成诊断报告。
+- **性能提升**：启动更快、内存占用更低、HTTP/2/3 优化。
+- **安全增强**：TLS/加密算法升级，依赖漏洞修复更及时。
+- **全局 API 扩展**：如 fetch、Web Streams、Blob、FormData 等。
+- **与 Node 18/20 主要区别**：
+  - 权限模型从实验转为正式，默认关闭但可生产用。
+  - WebSocket、Blob、FormData 等 Web API 原生支持。
+  - ESM 体验更好，兼容性提升。
+  - V8/性能/安全持续升级。
+
+### 代码示例：Node.js 22 原生 WebSocket
+```js
+import { WebSocketServer } from 'ws';
+const wss = new WebSocketServer({ port: 8080 });
+wss.on('connection', ws => {
+  ws.send('Hello Node22!');
+});
+```
+
+---
+
+## 1. Node.js 2025（v22 LTS）核心新特性
+- **V8 12.x 引擎升级**：支持 ES2024/2025 语法，性能和内存管理大幅提升。
+- **ESM（ECMAScript Modules）默认体验极佳**：无需 .mjs 区分，import/export 完全无缝，支持顶层 await。
+- **Web API 原生支持**：fetch、WebSocket、Blob、FormData 等 Web API 无需 polyfill。
+- **权限模型（Permission Model）正式版**：可精细限制文件、网络、子进程等访问权限，提升安全性。
+- **Test Runner 增强**：内置并发、快照测试、覆盖率统计，测试体验媲美 Jest。
+- **诊断与监控增强**：自动生成诊断报告，易于集成云监控。
+- **性能提升**：启动更快、内存占用更低、HTTP/2/3 优化、zstd 压缩支持。
+- **安全增强**：TLS/加密算法升级，系统证书集成，依赖漏洞修复更及时。
+- **新 API**：如 process.execve、tls.getCACertificates、v8.getCppHeapStatistics 等。
+- **模块钩子（module.registerHooks）**：支持自定义模块加载行为。
+
+## 2. 2025 年 Node.js 生态趋势与最佳实践
+- **ESM First**：全面拥抱 import/export，顶层 await 简化异步启动。
+- **Serverless 架构普及**：云函数、FaaS 场景下 Node.js 占主流，开发/部署更敏捷。
+- **微服务架构**：Node.js 轻量、易拆分，配合 Docker/K8s 实现弹性伸缩。
+- **AI/ML 集成**：Node.js 结合 TensorFlow.js、ONNX、Python 微服务，支持实时推理。
+- **GraphQL 优先**：GraphQL + Node.js 成为复杂数据接口首选。
+- **云原生与容器化**：Node 应用天然适配容器，支持自动扩缩、灰度发布。
+- **自动化测试与 CI/CD**：test runner + 覆盖率 + GitHub Actions 实现全流程自动化。
+- **安全与权限隔离**：生产环境强制开启权限模型，最小化攻击面。
+
+## 3. 与 Node 20/18 的主要区别
+- 权限模型从实验转为正式，生产可用。
+- Web API（WebSocket、Blob、FormData 等）原生支持，无需第三方库。
+- ESM 体验极大提升，兼容性更好。
+- V8/性能/安全持续升级，内存和启动速度更优。
+- 新增 zstd 压缩、TLSA DNS 解析、sqlite ArrayBufferView 支持等。
+
+## 4. 代码示例：Node.js 2025 原生 Web API
+```js
+// 顶层 await + fetch + WebSocket
+import { WebSocket } from 'ws';
+const res = await fetch('https://api.example.com/data');
+const data = await res.json();
+const ws = new WebSocket('wss://echo.websocket.org');
+ws.on('open', () => ws.send('Hello Node22!'));
+```
+
+## 5. 现代 Node.js 开发最佳实践
+- 只用 import/export，弃用 require。
+- 生产环境开启权限模型（--experimental-permission）。
+- 充分利用 test runner 做单测/集成测试。
+- 结合 Docker/K8s 做弹性部署。
+- 监控内存、CPU、事件循环延迟，自动诊断。
+- 结合 AI/ML 微服务做智能化后端。
+- 采用 serverless/FaaS 降低运维成本。
+
+---
+
+如需某一新特性源码分析、升级迁移方案、云原生/AI/Serverless 实战案例，欢迎继续提问！
+
+## 1. Node.js 2024 新特性
+- **ESM（ECMAScript Modules）默认支持**：无需 --experimental-modules，原生 import/export。
+- **V8 引擎升级**：支持更多 ES2023/2024 语法（如顶层 await、私有字段、装饰器等）。
+- **全局 fetch API**：Node 18+ 原生支持 fetch，无需引入 node-fetch。
+- **Test Runner 内置**：Node 18+ 内置 test runner，无需第三方测试框架。
+- **Web Streams API**：原生支持 ReadableStream、WritableStream。
+- **诊断报告（diagnostic report）增强**：可自动生成崩溃/异常报告。
+- **Permission Model（实验特性）**：可限制文件、网络等访问权限。
+- **性能与安全增强**：TLS/HTTP2/QUIC、加密算法升级。
+
+## 2. Node.js 开发常见注意事项
+- **异步编程**：优先使用 async/await，避免回调地狱。
+- **错误处理**：所有异步操作需 try/catch 或 .catch，防止未捕获异常导致进程崩溃。
+- **进程管理**：生产环境建议用 pm2、forever、systemd 等守护进程。
+- **环境变量管理**：用 dotenv、cross-env 管理多环境配置。
+- **日志与监控**：集成 winston、pino、log4js 等日志库，结合 ELK/Prometheus。
+- **安全加固**：避免 eval、及时依赖升级、使用 helmet、rate-limit、CSRF/XSS 防护。
+- **依赖管理**：锁定依赖版本，定期 npm audit。
+- **高并发优化**：利用 cluster、worker_threads、多进程分流。
+- **内存泄漏排查**：定期监控内存，避免全局变量、闭包引用。
+
+## 3. Node.js 主流框架介绍
+- **Express**：最流行的 Web 框架，轻量、生态丰富。
+- **Koa**：中间件机制更现代，async/await 优先。
+- **NestJS**：基于 TypeScript，OOP/DI/模块化，适合大型项目。
+- **Fastify**：极致性能，JSON 处理快，插件体系完善。
+- **Egg.js**：阿里开源，企业级 Node 框架，适合中后台。
+- **Hapi**：配置灵活，适合 API 服务。
+
+## 4. 如何监控内存泄漏
+- **process.memoryUsage()**：定期采集内存快照。
+- **Chrome DevTools**：node --inspect，远程调试内存快照、堆分析。
+- **heapdump**：生成 .heapsnapshot 文件，配合 DevTools 分析。
+- **clinic.js**：一键分析性能瓶颈和内存泄漏。
+- **常见泄漏点**：全局变量、未清理的定时器/事件、闭包、缓存未释放。
+- **代码示例**：
+  ```js
+  // 监控内存
+  setInterval(() => {
+    const mem = process.memoryUsage();
+    console.log('Heap Used:', mem.heapUsed / 1024 / 1024, 'MB');
+  }, 10000);
+  ```
+
+## 5. Node.js 稳定性与高可用实践
+- **异常捕获**：process.on('uncaughtException')、process.on('unhandledRejection')，但应及时退出重启。
+- **守护进程**：pm2、forever、systemd，自动重启、日志管理。
+- **健康检查**：/healthz 路由，配合负载均衡。
+- **限流与降级**：如 express-rate-limit、熔断器（opossum）。
+- **自动化监控**：Prometheus、Grafana、ELK、Sentry。
+- **灰度发布/回滚**：配合 CI/CD 工具。
+- **最佳实践**：
+  - 业务异常用 try/catch，系统异常用守护进程兜底。
+  - 关键依赖用超时/重试机制。
+  - 资源释放（如数据库连接）要及时。
+
+---
+
+如需某一框架源码分析、内存泄漏实战案例、稳定性架构方案，欢迎继续提问！
+
+## 企业级 Node.js 内存泄漏监控方案
+1. **多工具组合监控**：
+   - 线上用 prom-client + Grafana 实时采集内存、GC、事件循环延迟等指标。
+   - 定期用 heapdump 生成堆快照，配合 Chrome DevTools 分析。
+   - clinic.js/doctor 做定期全链路分析，发现内存泄漏趋势。
+   - Sentry/New Relic/Datadog 云端 APM，自动报警和诊断。
+2. **自动报警与诊断**：
+   - Prometheus 设置内存阈值报警，自动触发 heapdump。
+   - Sentry/Datadog 检测到内存异常自动推送告警。
+3. **最佳实践**：
+   - 生产环境禁用全局变量、及时清理定时器/事件监听。
+   - 代码层面用 memwatch-next 监控泄漏事件，开发阶段发现问题。
+   - 结合 pm2 cluster 模式，单实例异常自动重启，保障服务可用性。
+
+### 监控与报警代码片段
+```js
+const client = require('prom-client');
+const heapGauge = new client.Gauge({ name: 'node_heap_used', help: 'Heap used in bytes' });
+setInterval(() => {
+  heapGauge.set(process.memoryUsage().heapUsed);
+}, 10000);
+```
+Prometheus 侧设置报警规则：
+```
+ALERT NodeHeapHigh
+  IF node_heap_used > 1.5e+9
+  FOR 5m
+  LABELS { severity = "critical" }
+  ANNOTATIONS {
+    summary = "Node.js heap used超阈值，需排查内存泄漏"
+  }
+```
+
+---
+
+## pm2 高级用法
+- **进程守护与自动重启**：
+  - `pm2 start app.js --watch`，代码变动自动重启。
+  - `pm2 restart app --update-env`，热更新环境变量。
+- **日志管理**：
+  - `pm2 logs` 实时查看日志，`pm2 flush` 清空日志。
+  - 日志可自动分割、归档，支持外部日志系统（如 ELK）。
+- **健康检查与自愈**：
+  - `pm2 health` 查看进程健康，支持自定义健康检查脚本。
+  - 进程异常自动重启，支持 max_restarts、restart_delay 配置。
+- **环境变量与多环境部署**：
+  - `pm2 start app.js --env production`，支持多套 env 配置。
+  - `ecosystem.config.js` 支持多应用/多环境批量管理。
+- **集群与负载均衡**：
+  - `pm2 start app.js -i max`，自动根据 CPU 核心数启动多进程。
+  - 内置负载均衡，支持零停机重启（gracefulReload）。
+- **部署流程自动化**：
+  - `pm2 deploy` 支持一键部署、回滚、灰度发布。
+
+### pm2 ecosystem 配置示例
+```js
+module.exports = {
+  apps: [
+    {
+      name: 'api',
+      script: 'app.js',
+      instances: 'max',
+      exec_mode: 'cluster',
+      watch: true,
+      env: { NODE_ENV: 'development' },
+      env_production: { NODE_ENV: 'production' }
+    }
+  ],
+  deploy: {
+    production: {
+      user: 'node',
+      host: 'xxx.xxx.xxx.xxx',
+      ref: 'origin/main',
+      repo: 'git@github.com:repo.git',
+      path: '/var/www/app',
+      'post-deploy': 'npm install && pm2 reload ecosystem.config.js --env production'
+    }
+  }
+}
+```
+
+---
+
+## Node.js 集群实战案例
+1. **多核负载均衡**：
+   - pm2 cluster 模式自动分配请求到各 CPU 核心，提升吞吐。
+2. **零停机重启**：
+   - `pm2 reload app` 实现无缝重启，不中断服务。
+3. **灰度发布**：
+   - 结合 pm2 deploy，逐步切流，平滑升级。
+4. **监控与自动恢复**：
+   - 结合 prom-client/pm2 API 实时监控，进程异常自动拉起。
+
+### 集群模式启动命令
+```
+pm2 start app.js -i max --name myapp
+```
+
+### 零停机重启命令
+```
+pm2 reload myapp
+```
+
+---
+
+如需更深入的企业级监控、pm2 自动化运维、集群架构设计，欢迎继续提问！
+
+## Node.js 18+ 内置 fetch 与单元测试
+
+### 1. fetch API 原生支持
+- Node.js 18 起无需引入 node-fetch，直接用全局 fetch：
+  ```js
+  // Node.js 18+ 原生 fetch
+  const res = await fetch('https://api.github.com');
+  const data = await res.json();
+  console.log(data);
+  ```
+- 支持 Request/Response/Headers 等 Web 标准 API。
+- 适合服务端 HTTP 请求、API 聚合、SSR 场景。
+
+### 2. test runner 内置单元测试
+- Node.js 18+ 内置 test runner，无需 Jest、Mocha 等三方库。
+- 支持 describe/it、断言、并发、快照、覆盖率等。
+- 入口：`node --test` 或 `node test/my.test.js`。
+
+#### 基本单元测试示例
+```js
+// math.test.js
+import { test, describe, expect } from 'node:test';
+
+describe('math', () => {
+  test('add', () => {
+    expect(1 + 2).toBe(3);
+  });
+  test('sub', () => {
+    expect(5 - 2).toBe(3);
+  });
+});
+```
+- 运行：`node --test math.test.js`
+- 支持 ESM/CJS、并发、覆盖率、快照等高级特性。
+
+#### 断言用法
+- Node.js 18+ 内置 `assert`，也可用 expect 风格：
+  ```js
+  import assert from 'node:assert/strict';
+  test('mul', () => {
+    assert.strictEqual(2 * 3, 6);
+  });
+  ```
+
+---
+
+如需 test runner 高级用法、与 Jest/Mocha 迁移方案、CI 集成等，欢迎继续提问！

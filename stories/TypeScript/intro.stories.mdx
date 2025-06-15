@@ -2,3 +2,262 @@ import { Meta } from "@storybook/addon-docs";
 
 
 <Meta title="Hundun/TypeScript/介绍" />
+
+https://juejin.cn/post/7343548913033429011
+
+# TypeScript 最新特性与高频面试题
+
+# TypeScript 2024 最新特性与高频面试题（含答案）
+
+---
+
+## 1. TypeScript 5.x/2024 最新特性
+
+### 1.1 装饰器（Decorators）正式进入标准
+- 支持类、属性、方法、访问器、参数装饰器，语法与 ES Decorators 标准一致。
+- 例：
+  ```ts
+  @sealed
+  class MyClass {}
+  ```
+
+### 1.2 const type parameters
+- 支持类型参数 const 修饰，提升泛型类型推断能力。
+- 例：
+  ```ts
+  function foo<const T extends string[]>(arr: T) {}
+  ```
+
+### 1.3 extends infer 支持
+- 支持在条件类型中 infer 多个类型参数。
+- 例：
+  ```ts
+  type Foo<T> = T extends [infer A, infer B] ? A | B : never;
+  ```
+
+### 1.4 交集类型简化
+- 交集类型推断更智能，避免不必要的类型合并。
+
+### 1.5 其他增强
+- 支持 export type * from "..."，类型导出更灵活。
+- 支持 using 声明资源释放。
+- 性能优化、类型推断更智能、错误提示更友好。
+
+---
+
+## 2. 高频 TypeScript 面试题与答案
+
+### 2.1 基础与类型系统
+- **TypeScript 和 JavaScript 的区别？**
+  - TypeScript 是 JavaScript 的超集，增加了静态类型、类型推断、接口、泛型、类型保护等，能在编译期发现错误。
+- **什么是类型推断？什么是类型断言？**
+  - 类型推断：TS 自动根据赋值/上下文推断变量类型。
+  - 类型断言：开发者手动指定变量类型（如 `as string`），不会做类型转换。
+- **interface 和 type 有什么区别？**
+  - interface 可多次声明合并、可继承、主要用于对象结构；type 更灵活，可用于联合/交叉类型、别名、不可合并。
+- **什么是联合类型、交叉类型、字面量类型？**
+  - 联合类型：`A | B`，可为多种类型之一。
+  - 交叉类型：`A & B`，同时具备多种类型属性。
+  - 字面量类型：具体值类型，如 `'foo' | 'bar'`。
+- **keyof、typeof、in、extends、infer 的作用？**
+  - keyof：取对象所有键名组成的联合类型。
+  - typeof：取变量/表达式的类型。
+  - in：用于映射类型遍历属性。
+  - extends：条件类型/泛型约束。
+  - infer：在条件类型中推断类型变量。
+- **Partial、Required、Readonly、Pick、Omit 等工具类型原理？**
+  - `Partial<T>` // JS 泛型注释：所有属性变可选。
+  - `Required<T>` // JS 泛型注释：所有属性变必选。
+  - `Readonly<T>` // JS 泛型注释：所有属性只读。
+  - Pick 类型：选取部分属性。
+  - Omit 类型：排除部分属性。
+
+### 2.1.1 interface 和 type 的详细区别
+
+#### 1. 语法和能力
+- `interface` 只能用于描述对象、类的结构（属性、方法、索引、继承等）。
+- `type` 可用于类型别名，支持基本类型、联合类型、交叉类型、元组、映射等。
+
+#### 2. 声明合并
+- `interface` 支持多次声明同名接口，TS 会自动合并属性：
+  ```ts
+  interface A { x: number }
+  interface A { y: string }
+  // 合并后等价于：interface A { x: number; y: string }
+  ```
+- `type` 不支持声明合并，重复声明会报错。
+
+#### 3. 继承与扩展
+- `interface` 支持 extends 继承多个接口，也可 implements 被类实现：
+  ```ts
+  interface B { foo: string }
+  interface C extends B { bar: number }
+  class D implements C { foo = 'a'; bar = 1 }
+  ```
+- `type` 也可通过交叉类型扩展：
+  ```ts
+  type E = { foo: string }
+  type F = E & { bar: number }
+  ```
+
+#### 4. 表达能力
+- `type` 能表达联合、交叉、条件、映射、元组等复杂类型：
+  ```ts
+  type G = { a: number } | { b: string }
+  type H = { x: number } & { y: string }
+  type Tuple = [number, string]
+  ```
+- `interface` 只能描述对象结构，不能直接表达联合/交叉类型。
+
+#### 5. 场景与最佳实践
+- 推荐用 `interface` 描述对象、类、props、API 返回结构等。
+- 用 `type` 定义基本类型别名、联合/交叉类型、复杂类型工具。
+- 组件 props 推荐 interface，工具类型/联合类型用 type。
+
+#### 6. TS5+ 新特性
+- TS5.0 支持 interface 实现 symbol 索引签名、可选方法等。
+- 但 type 依然在类型体操、复杂类型推导中更灵活。
+
+#### 7. 互相兼容
+- interface 和 type 可互相扩展：
+  ```ts
+  interface I { a: number }
+  type J = I & { b: string }
+  interface K extends J { c: boolean }
+  ```
+
+#### 8. 总结表格
+| 特性         | interface | type |
+|--------------|-----------|------|
+| 对象结构     | ✅        | ✅   |
+| 联合类型     | ❌        | ✅   |
+| 交叉类型     | ❌        | ✅   |
+| 条件类型     | ❌        | ✅   |
+| 声明合并     | ✅        | ❌   |
+| 继承         | ✅        | ✅   |
+| implements   | ✅        | ❌   |
+| 类型体操     | ❌        | ✅   |
+| 推荐场景     | 对象/类   | 工具/联合 |
+
+#### 9. 典型面试答法
+- interface 更适合描述对象和类，支持声明合并和继承；type 更灵活，适合类型体操和复杂类型表达。实际开发中可结合使用，遵循"结构用 interface，类型运算用 type"的最佳实践。
+
+#### 10. type 不能被类 implements
+- 只有 interface 可以被类 implements，type 不能直接被 implements。
+- 示例：
+  ```ts
+  interface Foo { x: number }
+  class Bar implements Foo { x = 1 }
+
+  type Baz = { y: string }
+  // 错误：A class can only implement an object type or intersection of object types with statically known members.
+  // class Qux implements Baz { y = 'hi' } // ❌
+  ```
+- 但 type 如果是对象类型（非联合/交叉/条件类型），可被 implements，但不推荐，且复杂类型会报错。
+- 最佳实践：类实现结构建议用 interface。
+
+### 2.2 泛型与高级类型
+- **泛型的作用？如何定义泛型函数、泛型接口、泛型类？**
+  - 泛型用于复用类型逻辑、提升类型安全。定义：`function foo<T>(arg: T): T {}`、`interface Box<T> { value: T }`、`class MyClass<T> {}`
+- **泛型约束、默认类型、条件类型、映射类型、分布式条件类型？**
+  - 约束：`<T extends U>` 限定类型范围。
+  - 默认类型：`<T = string>`。
+  - 条件类型：`T extends U ? X : Y`。
+  - 映射类型：`{ [K in keyof T]: ... }`。
+  - 分布式条件类型：条件类型作用于联合类型的每个成员。
+- **infer 关键字的用法？**
+  - 在条件类型中推断类型变量，如 `T extends Promise<infer U> ? U : T`。
+- **如何实现 DeepPartial、DeepReadonly 等递归类型？**
+  - 递归遍历对象属性，遇到对象类型递归应用 Partial/Readonly。
+  - 例：
+    ```ts
+    type DeepPartial<T> = { [K in keyof T]?: DeepPartial<T[K]> };
+    ```
+
+### 2.2.1 TypeScript 常见类型体操：联合、交叉、条件、映射、元组
+
+#### 1. 联合类型（Union Type）
+- 语法：`A | B`，表示类型可以是 A 或 B。
+- 应用：参数/变量可为多种类型。
+- 示例：
+  ```ts
+  type Status = 'success' | 'error' | 'loading';
+  let s: Status = 'success';
+  s = 'error'; // 合法
+  // s = 'other'; // 报错
+  ```
+
+#### 2. 交叉类型（Intersection Type）
+- 语法：`A & B`，表示类型同时具备 A 和 B 的属性。
+- 应用：对象混合、类型扩展。
+- 示例：
+  ```ts
+  type A = { foo: string };
+  type B = { bar: number };
+  type C = A & B; // { foo: string; bar: number }
+  const obj: C = { foo: 'hi', bar: 1 };
+  ```
+
+#### 3. 条件类型（Conditional Type）
+- 语法：`T extends U ? X : Y`，根据类型关系选择类型。
+- 应用：类型推导、类型变换。
+- 示例：
+  ```ts
+  type IsString<T> = T extends string ? true : false;
+  type A = IsString<'foo'>; // true
+  type B = IsString<123>;   // false
+  ```
+
+#### 4. 映射类型（Mapped Type）
+- 语法：`{ [K in Keys]: Type }`，对对象属性做批量变换。
+- 应用：工具类型（如 Partial、Readonly）。
+- 示例：
+  ```ts
+  type MyPartial<T> = { [K in keyof T]?: T[K] };
+  type Obj = { a: number; b: string };
+  type PartialObj = MyPartial<Obj>; // { a?: number; b?: string }
+  ```
+
+#### 5. 元组类型（Tuple Type）
+- 语法：`[T1, T2, ...]`，定长、定类型的数组。
+- 应用：函数多返回值、结构化数据。
+- 示例：
+  ```ts
+  const tuple: [number, string, boolean] = [1, 'hi', true];
+  function usePair(): [string, number] {
+    return ['foo', 42];
+  }
+  ```
+
+### 2.3 类型体操与实战
+- **实现一个类型：将字符串类型转为联合类型？**
+  ```ts
+  type StrToUnion<S extends string> = S extends `${infer F}${infer R}` ? F | StrToUnion<R> : never;
+  ```
+- **实现 PromiseAll 的类型推断？**
+  - 用泛型和条件类型推断每个 Promise 的返回值，返回 Promise 类型的所有结果数组。
+- **如何实现链式调用类型？**
+  - 用泛型和 this 返回类型递归定义链式方法。
+- **如何实现类型安全的事件总线？**
+  - 用泛型约束事件名和参数类型，on/off/emit 方法类型安全。
+- **如何用 TS 实现 Redux 的 connect 类型推断？**
+  - 用泛型、条件类型推断 mapStateToProps/mapDispatchToProps 的返回类型，合并到组件 props。
+
+### 2.4 实际开发场景
+- **如何在 React/Vue 项目中用好 TypeScript？**
+  - 用类型声明 props、state、context、ref、事件等，结合泛型和工具类型提升类型安全。
+- **如何为第三方库编写类型声明文件（.d.ts）？**
+  - 用 declare module、export type/interface、全局声明等，补充类型信息。
+- **any/unknown/never/void 区别？**
+  - any：任意类型，关闭类型检查。
+  - unknown：安全的任意类型，赋值前需类型缩小。
+  - never：不可能的类型（如抛错、死循环）。
+  - void：无返回值。
+- **如何用 TS 做 API 类型自动推断？**
+  - 用泛型、条件类型、infer 自动推断接口返回值类型。
+- **TypeScript 编译配置（tsconfig）常用项？**
+  - strict、target、module、jsx、esModuleInterop、baseUrl、paths、types、include/exclude 等。
+
+---
+
+如需某一特性源码级分析或面试题详细答案，欢迎继续提问！

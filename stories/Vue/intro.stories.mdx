@@ -2,3 +2,133 @@ import { Meta } from "@storybook/addon-docs";
 
 
 <Meta title="Hundun/Vue/介绍" />
+
+# Vue2 与 Vue3 全面对比与高频面试题
+
+---
+
+## 1. Vue2 与 Vue3 的核心区别
+
+| 维度         | Vue2                        | Vue3                                      |
+|--------------|-----------------------------|--------------------------------------------|
+| 响应式原理   | Object.defineProperty       | Proxy（更高效、支持数组/Map/Set）         |
+| 组合逻辑     | Options API                 | Composition API（setup、hooks）            |
+| 性能         | 首次渲染/更新较慢           | 更快，内存占用更低，编译优化               |
+| TypeScript   | 支持有限                    | 完全重写，类型推断友好                     |
+| Tree-shaking | 不支持                      | 支持，包体更小                             |
+| Fragment     | 不支持                      | 支持多根节点                               |
+| Teleport     | 不支持                      | 支持跨层级渲染                             |
+| Suspense     | 不支持                      | 支持异步组件占位                           |
+| 生态         | 2.x 生态成熟                 | 3.x 生态逐步完善                           |
+| 兼容性       | 兼容老项目                   | 需升级适配                                 |
+
+### 1.1 响应式系统对比
+- Vue2 用 Object.defineProperty，无法监听新增/删除属性、数组索引变动。
+- Vue3 用 Proxy，能深度监听对象/数组/Map/Set，性能更优。
+
+### 1.2 API 设计对比
+- Vue2 以 Options API（data、methods、computed、watch）为主，逻辑分散。
+- Vue3 推荐 Composition API（setup、ref、reactive、computed、watchEffect），逻辑聚合、复用性强。
+
+#### Composition API 示例
+```js
+// Vue3 组合式写法
+import { ref, computed } from 'vue';
+export default {
+  setup() {
+    const count = ref(0);
+    const double = computed(() => count.value * 2);
+    return { count, double };
+  }
+}
+```
+
+### 1.3 性能与编译优化
+- Vue3 编译器更智能，静态提升、patch flag 优化 diff，首次渲染/更新更快。
+- 支持 Tree-shaking，未用到的 API 不打包，包体更小。
+
+### 1.4 TypeScript 支持
+- Vue3 用 TS 重写，类型推断、IDE 体验大幅提升。
+
+### 1.5 新特性
+- Fragment：支持多根节点组件。
+- Teleport：跨层级渲染 DOM。
+- Suspense：异步组件占位/加载。
+
+---
+
+## 2. 高频面试题与标准答案
+
+### 2.1 Vue2 和 Vue3 响应式原理有何不同？
+- Vue2 用 Object.defineProperty，不能监听数组索引/对象新增属性。
+- Vue3 用 Proxy，能深度监听对象/数组/Map/Set，性能更优，API 更一致。
+
+### 2.2 Composition API 有什么优势？
+- 逻辑聚合、复用性强，支持 hooks，类型推断好，利于大型项目维护。
+
+### 2.3 Vue3 性能优化点有哪些？
+- 编译器静态提升、patch flag、Tree-shaking、Proxy 响应式、Fragment/Teleport/Suspense 支持。
+
+### 2.4 Vue3 如何支持 TypeScript？
+- 全量 TS 重写，类型推断友好，IDE 智能提示完善。
+
+### 2.5 Fragment/Teleport/Suspense 分别是什么？
+- Fragment：多根节点组件。
+- Teleport：跨层级渲染。
+- Suspense：异步组件占位/加载。
+
+### 2.6 Vue3 如何实现 Tree-shaking？
+- 采用 ESM 导出，未用到的 API 不会被打包进最终产物。
+
+### 2.7 Vue3 兼容性与迁移注意点？
+- 需升级依赖、适配新 API，部分 2.x 插件需等 3.x 版本。
+
+---
+
+## Vue2 vs Vue3 的 DOM Diff 算法详解
+
+### 1. Vue2 的 DOM Diff 原理
+- 基于 snabbdom 算法，采用双端比较（头尾指针），核心流程：
+  1. 新旧节点头尾指针依次比较，能复用则 patch，不能则插入/删除。
+  2. 通过 key 优化复用，未命中则遍历查找。
+  3. 复杂场景下性能一般，静态节点每次都 diff。
+- 伪代码：
+  ```js
+  while (oldStart <= oldEnd && newStart <= newEnd) {
+    if (sameNode(oldStart, newStart)) patch();
+    else if (sameNode(oldEnd, newEnd)) patch();
+    else if (sameNode(oldStart, newEnd)) move();
+    else if (sameNode(oldEnd, newStart)) move();
+    else searchByKey();
+  }
+  ```
+
+### 2. Vue3 的 DOM Diff 优化
+- 依然基于双端比较，但引入了 Patch Flag、静态提升等多项优化：
+  - **Patch Flag**：编译期标记动态节点，运行时只 diff 有变化的部分，极大减少无效比较。
+  - **静态提升**：静态节点只生成一次，后续渲染直接复用，无需 diff。
+  - **最长递增子序列（LIS）**：优化子节点移动，最少 DOM 操作。
+  - **Fragment 支持**：多根节点 diff 更高效。
+- 性能对比：Vue3 在大列表、静态内容、复杂嵌套场景下明显优于 Vue2。
+
+#### Patch Flag 示例
+```js
+// 编译后 patchFlag 标记动态属性/事件/文本
+createVNode('div', { id: dynamicId }, null, PatchFlags.PROPS)
+```
+
+#### 静态提升示意
+```js
+// 静态节点只生成一次，后续直接复用
+const staticVNode = createVNode('div', { class: 'static' })
+```
+
+### 3. 面试答题要点
+- Vue2 diff 主要靠双端比较和 key，静态节点每次都 diff。
+- Vue3 diff 引入 patch flag、静态提升、LIS，极大提升性能。
+- Vue3 只 diff 有 patchFlag 的动态节点，静态节点跳过。
+- Fragment/Teleport 等新特性也对 diff 做了适配。
+
+---
+
+如需源码级 diff 流程分析、性能对比 demo、patch flag/LIS 细节讲解，欢迎继续提问！
