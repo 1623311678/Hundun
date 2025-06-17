@@ -1,0 +1,266 @@
+import { Meta } from "@storybook/addon-docs";
+
+<Meta title="Hundun/编程范式/介绍" />
+
+
+# 编程范式介绍
+
+编程范式是编程语言的基本风格和模式，它决定了我们如何组织和构建代码。以下是业界主流的编程范式：
+
+## 1. 命令式编程 (Imperative Programming)
+
+命令式编程是最基础的编程范式，它通过一系列的命令来告诉计算机如何执行任务。
+
+```javascript
+// 命令式编程示例
+let sum = 0;
+for (let i = 1; i <= 10; i++) {
+    sum += i;
+}
+console.log(sum);
+```
+
+特点：
+- 关注"如何做"（How）
+- 使用变量存储状态
+- 通过语句改变程序状态
+- 代码执行顺序明确
+
+## 2. 声明式编程 (Declarative Programming)
+
+声明式编程关注"做什么"（What），而不是"如何做"（How）。
+
+```javascript
+// 声明式编程示例
+const sum = [1, 2, 3, 4, 5].reduce((acc, curr) => acc + curr, 0);
+```
+
+特点：
+- 关注"做什么"（What）
+- 代码更简洁、可读性更强
+- 减少副作用
+- 更容易进行代码优化
+
+## 3. 面向对象编程 (Object-Oriented Programming, OOP)
+
+面向对象编程将数据和操作数据的方法组织在对象中。
+
+```javascript
+// 面向对象编程示例
+class Animal {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    speak() {
+        console.log(`${this.name} makes a sound.`);
+    }
+}
+
+class Dog extends Animal {
+    speak() {
+        console.log(`${this.name} barks.`);
+    }
+}
+```
+
+特点：
+- 封装
+- 继承
+- 多态
+- 抽象
+
+## 4. 函数式编程 (Functional Programming, FP)
+
+函数式编程将计算视为数学函数的求值，避免改变状态和可变数据。
+
+```javascript
+// 函数式编程示例
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+const sum = doubled.reduce((acc, curr) => acc + curr, 0);
+```
+
+特点：
+- 纯函数
+- 不可变性
+- 高阶函数
+- 函数组合
+
+## 5. 响应式编程 (Reactive Programming)
+
+响应式编程关注数据流和变化的传播。
+
+```javascript
+// 响应式编程示例 (使用 RxJS)
+const button = document.querySelector('button');
+const clicks = fromEvent(button, 'click');
+const result = clicks.pipe(
+    map(() => 1),
+    scan((acc, curr) => acc + curr, 0)
+);
+```
+
+特点：
+- 数据流
+- 异步处理
+- 事件驱动
+- 自动传播变化
+
+## 6. 逻辑编程 (Logic Programming)
+
+逻辑编程基于形式逻辑，通过声明事实和规则来解决问题。
+
+```prolog
+% 逻辑编程示例 (Prolog)
+parent(john, mary).
+parent(mary, tom).
+grandparent(X, Z) :- parent(X, Y), parent(Y, Z).
+```
+
+特点：
+- 基于规则
+- 声明式
+- 自动推理
+- 模式匹配
+
+## 7. 并发编程 (Concurrent Programming)
+
+并发编程处理多个任务的同时执行。
+
+```javascript
+// 并发编程示例
+async function fetchData() {
+    const [users, posts] = await Promise.all([
+        fetch('/api/users'),
+        fetch('/api/posts')
+    ]);
+    return { users, posts };
+}
+```
+
+特点：
+- 并行执行
+- 任务调度
+- 同步机制
+- 资源竞争处理
+
+## 8. 元编程 (Metaprogramming)
+
+元编程是编写能够操作其他程序的程序。
+
+```javascript
+// 元编程示例
+class User {
+    @log
+    getName() {
+        return this.name;
+    }
+}
+
+function log(target, key, descriptor) {
+    const original = descriptor.value;
+    descriptor.value = function(...args) {
+        console.log(`Calling ${key} with`, args);
+        return original.apply(this, args);
+    };
+    return descriptor;
+}
+```
+
+特点：
+- 代码生成
+- 反射
+- 注解
+- 宏
+
+## 9. 面向切面编程 (Aspect-Oriented Programming, AOP)
+
+面向切面编程将横切关注点与业务逻辑分离。
+
+```javascript
+// AOP示例
+function log(target, key, descriptor) {
+    const original = descriptor.value;
+    descriptor.value = function(...args) {
+        console.log(`Before ${key}`);
+        const result = original.apply(this, args);
+        console.log(`After ${key}`);
+        return result;
+    };
+    return descriptor;
+}
+```
+
+特点：
+- 关注点分离
+- 横切关注点
+- 代码复用
+- 模块化
+
+## 10. 领域驱动设计 (Domain-Driven Design, DDD)
+
+领域驱动设计是一种软件开发方法，强调领域模型和业务逻辑。
+
+```javascript
+// DDD示例
+class Order {
+    constructor(id, items) {
+        this.id = id;
+        this.items = items;
+        this.status = 'PENDING';
+    }
+    
+    place() {
+        if (this.items.length === 0) {
+            throw new Error('Order must have items');
+        }
+        this.status = 'PLACED';
+    }
+}
+```
+
+特点：
+- 领域模型
+- 统一语言
+- 限界上下文
+- 领域事件
+
+## 最佳实践建议
+
+1. 选择合适的范式：
+   - 根据项目需求选择
+   - 考虑团队熟悉度
+   - 评估维护成本
+
+2. 范式组合：
+   - 不同范式可以组合使用
+   - 取长补短
+   - 保持代码一致性
+
+3. 代码质量：
+   - 保持代码可读性
+   - 遵循设计原则
+   - 适当使用设计模式
+
+4. 性能考虑：
+   - 评估性能影响
+   - 进行性能优化
+   - 监控性能指标
+
+## 总结
+
+编程范式是软件开发中的重要概念，不同的范式适用于不同的场景。在实际开发中，我们应该：
+
+1. 理解各种范式的特点
+2. 根据需求选择合适的范式
+3. 灵活组合不同范式
+4. 保持代码质量和可维护性
+5. 持续学习和实践
+
+通过合理使用编程范式，我们可以：
+- 提高代码质量
+- 提升开发效率
+- 降低维护成本
+- 增强代码可读性
+- 促进团队协作
