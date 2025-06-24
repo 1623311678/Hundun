@@ -16,6 +16,7 @@ export const parameters = {
         "Hundun",
         [
           "混沌建站-前端工程化",
+          'AI',
           "脚手架",
           "标准化模版", 
           ["介绍","移动端",["介绍","react-antd-mobile"],"PC端"],
