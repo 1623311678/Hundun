@@ -1,0 +1,86 @@
+import { Meta } from "@storybook/addon-docs";
+
+
+<Meta title="Hundun/Node/包管理工具" />
+
+# Node.js 包管理与版本/源管理工具对比
+
+## 1. npm
+- **全称**：Node Package Manager
+- **简介**：Node.js 官方自带的包管理工具，最早、最广泛使用。
+- **主要功能**：依赖管理、脚本运行、包发布
+- **特点**：生态最大，兼容性最好，速度一般，node_modules 体积大
+- **适用场景**：所有 Node.js 项目，兼容性优先
+
+## 2. yarn
+- **全称**：Yet Another Resource Negotiator
+- **简介**：Facebook 推出的包管理器，主打速度和一致性。
+- **主要功能**：依赖管理、脚本运行、workspaces
+- **特点**：并行下载，速度快，离线缓存好，锁文件稳定，兼容 npm registry
+- **适用场景**：中大型项目、monorepo、追求更快安装速度
+
+## 3. pnpm
+- **全称**：Performant npm
+- **简介**：新一代包管理器，主打极致性能和磁盘空间节省。
+- **主要功能**：依赖管理、脚本运行、workspaces
+- **特点**：硬链接技术，node_modules 体积极小，安装速度极快，依赖隔离性好，兼容 npm/yarn 生态
+- **适用场景**：大型 monorepo、多项目仓库、对磁盘空间和速度有极致要求
+
+## 4. nrm
+- **全称**：NPM Registry Manager
+- **简介**：npm 源（registry）管理工具，方便切换淘宝、官方、公司私有源等。
+- **主要功能**：一键切换 npm/yarn/pnpm 的 registry，管理自定义源
+- **特点**：适合国内开发者快速切换淘宝源，也可用于公司私有源
+- **适用场景**：需要频繁切换 npm 源
+
+## 5. nvm
+- **全称**：Node Version Manager
+- **简介**：Node.js 版本管理工具（基于 shell 脚本实现，跨平台）。
+- **主要功能**：安装/卸载/切换不同 Node.js 版本，支持 .nvmrc 文件
+- **特点**：多 Node 版本共存，适合多项目/多版本开发
+- **适用场景**：需要在不同项目间切换 Node 版本
+
+## 6. n
+- **简介**：另一款 Node.js 版本管理工具（基于 Node 实现，安装简单）。
+- **主要功能**：安装/切换 Node.js 版本，命令行交互友好
+- **特点**：安装简单，命令直观，适合不想折腾 shell 脚本的用户
+- **适用场景**：需要简单 Node 版本切换
+
+## 总结对比表
+
+| 工具   | 主要用途         | 典型命令           | 适用场景                   |
+|--------|------------------|--------------------|----------------------------|
+| npm    | 包管理           | npm install        | 兼容性优先，通用           |
+| yarn   | 包管理           | yarn install       | 速度、锁定一致性、monorepo |
+| pnpm   | 包管理           | pnpm install       | 极致性能、磁盘优化、monorepo|
+| nrm    | 源切换           | nrm use taobao     | 切换 npm 源                |
+| nvm    | Node 版本管理    | nvm use 18         | 多 Node 版本开发           |
+| n      | Node 版本管理    | n 18.0.0           | 简单 Node 版本切换         |
+
+## 典型用法举例
+
+```bash
+# npm 安装依赖
+npm install
+
+# yarn 安装依赖
+yarn install
+
+# pnpm 安装依赖
+pnpm install
+
+# nrm 切换淘宝源
+nrm use taobao
+
+# nvm 安装并切换 Node 版本
+nvm install 18
+nvm use 18
+
+# n 安装并切换 Node 版本
+n 18.0.0
+```
+
+## 总结建议
+- **包管理**：推荐 pnpm > yarn > npm（新项目优先 pnpm，老项目兼容 npm/yarn）
+- **Node 版本管理**：推荐 nvm（跨平台）、n（简单）
+- **源管理**：推荐 nrm（国内开发必备）
