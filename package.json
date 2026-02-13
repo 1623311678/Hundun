@@ -5,8 +5,8 @@
     "type": "git",
     "url": "https://github.com/1623311678/Hundun"
   },
+  "homepage": "https://1623311678.github.io/Hundun",
   "author": "junkai wang",
-  "homepage": "https://github.com/1623311678/Hundun",
   "dependencies": {
     "less": "^3.13.1",
     "react": "^18.2.0",
@@ -22,10 +22,12 @@
     "@storybook/manager-webpack4": "^6.5.12",
     "@storybook/react": "^6.5.12",
     "@storybook/testing-library": "^0.0.13",
-    "@storybook/theming": "^6.5.12"
+    "@storybook/theming": "^6.5.12",
+    "gh-pages": "^6.3.0"
   },
   "scripts": {
     "storybook": "start-storybook -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "deploy-storybook": "rm -rf node_modules/.cache/gh-pages -f && rm -rf node_modules/.cache/gh-pagesbuild-storybook && gh-pages -d storybook-static -f"
   }
 }
