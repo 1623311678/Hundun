@@ -1,0 +1,44 @@
+name: NodeJS with Webpack
+
+on:
+  push:
+    branches: [ "master" ]
+
+jobs:
+  #build
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [14.15.2]
+    steps:
+      # pull code
+      - uses: actions/checkout@v3
+      # install
+      - name: Install
+        uses: actions/setup-node@v3
+        with:
+          node-version: 14
+          cache: 'npm'
+      - run : npm config set registry http://registry.npm.taobao.org/
+      - run : npm install
+      # build
+      - name: Build
+        uses: actions/setup-node@v3
+      - run : npm run build-storybook
+      # deploy
+      - name: Deploy
+        uses: easingthemes/ssh-deploy@v2.0.7
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.ACCESS_TOKEN }}
+          ARGS: "-avz --delete"
+          SOURCE: "storybook-static/"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.TARGET }}
+
+
+
+
+    
+    
